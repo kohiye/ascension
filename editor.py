@@ -24,6 +24,7 @@ class Editor:
         # canvas stuff:
         self.canvas_data = {}
         self.last_cell = None
+        self.selection_id = "wall"
 
     def event_loop(self):
         for event in pygame.event.get():
@@ -57,9 +58,9 @@ class Editor:
 
             if current_cell != self.last_cell:
                 if current_cell in self.canvas_data:
-                    self.canvas_data[current_cell].add_id("wall")
+                    self.canvas_data[current_cell].add_id(self.selection_id)
                 else:
-                    self.canvas_data[current_cell] = CanvasTile("wall")
+                    self.canvas_data[current_cell] = CanvasTile(self.selection_id)
 
                 self.last_cell = current_cell
 
