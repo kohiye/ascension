@@ -20,8 +20,7 @@ class Main:
                     pygame.quit()
                     sys.exit()
                 case 1:
-                    self.editor.run(dt)
-            self.mode = self.editor.mode_switch()
+                    self.mode = self.editor.run(dt)
             pygame.display.update()
 
 
