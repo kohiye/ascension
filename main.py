@@ -1,12 +1,16 @@
 import pygame
 import sys
+
 from editor import Editor
+import settings as s
 
 
 class Main:
     def __init__(self):
         pygame.init()
-        self.display_surface = pygame.display.set_mode((1000, 500))
+        self.display_surface = pygame.display.set_mode(
+            (s.WINDOW_WIDTH, s.WINDOW_HEIGTH)
+        )
         self.clock = pygame.time.Clock()
         self.editor = Editor()
 
