@@ -4,10 +4,13 @@ from pygame.math import Vector2 as vector
 from pygame.mouse import get_pressed as mouse_buttons
 from pygame.mouse import get_pos as mouse_pos
 
+from menu import Menu
+
 
 class Editor:
     def __init__(self):
         self.display_surface = pygame.display.get_surface()
+        self.menu = Menu()
 
         self.origin = vector((500, 250))
         self.pan_mode = False
@@ -39,4 +42,5 @@ class Editor:
         self.event_loop()
         self.display_surface.fill("white")
         pygame.draw.circle(self.display_surface, "red", self.origin, 30)
+        self.menu.display()
         return self.mode
