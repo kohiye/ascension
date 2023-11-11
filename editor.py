@@ -57,11 +57,11 @@ class Editor:
 
             if current_cell != self.last_cell:
                 if current_cell in self.canvas_data:
-                    pass
+                    self.canvas_data[current_cell].add_id("wall")
                 else:
-                    self.canvas_data[current_cell] = "occupied"
+                    self.canvas_data[current_cell] = CanvasTile("wall")
+
                 self.last_cell = current_cell
-                print(self.canvas_data)
 
     def draw_tile_guides(self):
         cols = s.WINDOW_WIDTH // s.TILE_SIZE
@@ -81,10 +81,36 @@ class Editor:
 
         self.display_surface.blit(self.guide_surf, (0, 0))
 
+    def draw_tiles(self):
+        for cell_pos, tile in self.canvas_data.items():
+            pos = self.origin + vector(cell_pos) * s.TILE_SIZE
+
+            if tile.wall:
+                surf = pygame.surface.Surface((s.TILE_SIZE, s.TILE_SIZE))
+                surf.fill("brown")
+                rect = surf.get_rect(topleft=pos)
+                self.display_surface.blit(surf, rect)
+
     def run(self, dt):
         self.event_loop()
         self.display_surface.fill("white")
         self.draw_tile_guides()
+        self.draw_tiles()
         pygame.draw.circle(self.display_surface, "red", self.origin, 30)
         self.menu.display()
         return self.mode
+
+
+class CanvasTile:
+    def __init__(self, tile_id):
+        self.wall = False
+        self.coin = None
+
+        self.add_id(tile_id)
+
+    def add_id(self, tile_id):
+        match tile_id:
+            case "wall":
+                self.wall = True
+            case "coin":
+                self.coin = tile_id
