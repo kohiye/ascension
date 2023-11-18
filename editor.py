@@ -24,8 +24,8 @@ class Editor:
         # canvas stuff:
         self.canvas_data = {}
         self.last_cell = None
-        self.selection_type = "float"
-        self.selection_id = "chair"
+        self.selection_type = "tile"
+        self.selection_id = "coin"
 
         # float stuff:
         self.canvas_floats = pygame.sprite.Group()
@@ -36,7 +36,9 @@ class Editor:
             self.mode_switch(event)
             self.pan_movement(event)
             self.float_drag(event)
+
             self.canvas_add()
+            self.canvas_remove()
 
     def mode_switch(self, event):
         if event.type == pygame.QUIT:
@@ -73,7 +75,7 @@ class Editor:
                         self.canvas_data[current_cell] = CanvasTile(self.selection_id)
 
                     self.last_cell = current_cell
-            else:
+            if self.selection_type == "float":
                 CanvasFloat(
                     pos=mouse_pos(),
                     surf=pygame.surface.Surface((100, 100)),
@@ -81,6 +83,15 @@ class Editor:
                     origin=self.origin,
                     group=self.canvas_floats,
                 )
+
+    def canvas_remove(self):
+        if mouse_buttons()[2]:
+            if self.canvas_data:
+                current_cell = self.get_current_cell()
+                if current_cell in self.canvas_data:
+                    self.canvas_data[current_cell].remove_id(self.selection_id)
+                    if self.canvas_data[current_cell].is_empty:
+                        del self.canvas_data[current_cell]
 
     def float_drag(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and mouse_buttons()[0]:
@@ -122,6 +133,12 @@ class Editor:
                 surf.fill("brown")
                 rect = surf.get_rect(topleft=pos)
                 self.display_surface.blit(surf, rect)
+            if tile.coin:
+                surf = pygame.surface.Surface((s.TILE_SIZE, s.TILE_SIZE))
+                surf.fill("gold")
+                rect = surf.get_rect(topleft=pos)
+                self.display_surface.blit(surf, rect)
+
         self.canvas_floats.draw(self.display_surface)
 
     def run(self, dt):  # dt for future animations
@@ -140,6 +157,8 @@ class CanvasTile:
         self.wall = False
         self.coin = None
 
+        self.is_empty = False
+
         self.add_id(tile_id)
 
     def add_id(self, tile_id):
@@ -148,6 +167,18 @@ class CanvasTile:
                 self.wall = True
             case "coin":
                 self.coin = tile_id
+
+    def remove_id(self, tile_id):
+        match tile_id:
+            case "wall":
+                self.wall = False
+            case "coin":
+                self.coin = None
+        self.check_content()
+
+    def check_content(self):
+        if not self.wall and not self.coin:
+            self.is_empty = True
 
 
 class CanvasFloat(pygame.sprite.Sprite):
