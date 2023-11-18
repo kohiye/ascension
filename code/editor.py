@@ -6,6 +6,7 @@ from pygame.mouse import get_pos as mouse_pos
 
 from menu import Menu
 import settings as s
+from timer import Timer
 
 
 class Editor:
@@ -15,6 +16,7 @@ class Editor:
 
         self.origin = vector((s.WINDOW_WIDTH // 2, s.WINDOW_HEIGTH // 2))
         self.pan_mode = False
+        self.hold_timer = Timer(200)
         self.pan_offset = vector()
         self.mode = 1
 
@@ -24,19 +26,20 @@ class Editor:
         # canvas stuff:
         self.canvas_data = {}
         self.last_cell = None
+        self.float_cooldown_timer = Timer(100)
         self.selection_id = 0
         self.objects = {
             0: {
                 "type": "tile",
-                "surf": pygame.image.load("./graphics/wall.jpg").convert_alpha(),
+                "surf": pygame.image.load("../graphics/wall.jpg").convert_alpha(),
             },
             1: {
                 "type": "tile",
-                "surf": pygame.image.load("./graphics/a.png").convert_alpha(),
+                "surf": pygame.image.load("../graphics/a.png").convert_alpha(),
             },
             2: {
                 "type": "float",
-                "surf": pygame.image.load("./graphics/float.png").convert_alpha(),
+                "surf": pygame.image.load("../graphics/float.png").convert_alpha(),
             },
         }
 
@@ -46,13 +49,25 @@ class Editor:
 
     def event_loop(self):
         for event in pygame.event.get():
+            self.hold_checker(event)
             self.mode_switch(event)
             self.pan_movement(event)
             self.float_drag(event)
             self.selection_arrows(event)
 
-            self.canvas_add()
-            self.canvas_remove()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                self.canvas_add()
+                self.canvas_remove()
+            else:
+                print(self.hold_timer.active, self.float_cooldown_timer.active)
+                if not self.hold_timer.active and not self.float_cooldown_timer.active:
+                    self.canvas_add()
+                    self.canvas_remove()
+
+    def hold_checker(self, event):
+        if event.type == (pygame.MOUSEBUTTONDOWN or pygame.MOUSEBUTTONUP):
+            self.hold_timer.deactivate()
+            self.hold_timer.activate()
 
     def mode_switch(self, event):
         if event.type == pygame.QUIT:
@@ -105,6 +120,7 @@ class Editor:
                     origin=self.origin,
                     group=self.canvas_floats,
                 )
+                self.float_cooldown_timer.activate()
 
     def canvas_remove(self):
         if mouse_buttons()[2]:
@@ -164,6 +180,8 @@ class Editor:
     def run(self, dt):  # dt for future animations
         self.event_loop()
         self.canvas_floats.update()
+        self.hold_timer.update()
+        self.float_cooldown_timer.update()
         self.display_surface.fill("white")
         self.draw_tile_guides()
         self.draw_level()
