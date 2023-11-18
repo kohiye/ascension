@@ -24,8 +24,21 @@ class Editor:
         # canvas stuff:
         self.canvas_data = {}
         self.last_cell = None
-        self.selection_type = "tile"
-        self.selection_id = "coin"
+        self.selection_id = 0
+        self.objects = {
+            0: {
+                "type": "tile",
+                "surf": pygame.image.load("./graphics/wall.jpg").convert_alpha(),
+            },
+            1: {
+                "type": "tile",
+                "surf": pygame.image.load("./graphics/a.png").convert_alpha(),
+            },
+            2: {
+                "type": "float",
+                "surf": pygame.image.load("./graphics/float.png").convert_alpha(),
+            },
+        }
 
         # float stuff:
         self.canvas_floats = pygame.sprite.Group()
@@ -36,6 +49,7 @@ class Editor:
             self.mode_switch(event)
             self.pan_movement(event)
             self.float_drag(event)
+            self.selection_arrows(event)
 
             self.canvas_add()
             self.canvas_remove()
@@ -46,6 +60,14 @@ class Editor:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.mode = 0
+
+    def selection_arrows(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RIGHT:
+                self.selection_id += 1
+            if event.key == pygame.K_LEFT:
+                self.selection_id -= 1
+        self.selection_id = max(0, min(self.selection_id, 2))
 
     def get_current_cell(self):
         temp_vect = (vector(mouse_pos()) - self.origin) // s.TILE_SIZE
@@ -67,7 +89,7 @@ class Editor:
     def canvas_add(self):
         if mouse_buttons()[0] and not self.float_drag_active:
             current_cell = self.get_current_cell()
-            if self.selection_type == "tile":
+            if self.objects[self.selection_id]["type"] == "tile":
                 if current_cell != self.last_cell:
                     if current_cell in self.canvas_data:
                         self.canvas_data[current_cell].add_id(self.selection_id)
@@ -75,10 +97,10 @@ class Editor:
                         self.canvas_data[current_cell] = CanvasTile(self.selection_id)
 
                     self.last_cell = current_cell
-            if self.selection_type == "float":
+            if self.objects[self.selection_id]["type"] == "float":
                 CanvasFloat(
                     pos=mouse_pos(),
-                    surf=pygame.surface.Surface((100, 100)),
+                    surf=self.objects[self.selection_id]["surf"],
                     float_id=self.selection_id,
                     origin=self.origin,
                     group=self.canvas_floats,
@@ -129,13 +151,11 @@ class Editor:
             pos = self.origin + vector(cell_pos) * s.TILE_SIZE
 
             if tile.wall:
-                surf = pygame.surface.Surface((s.TILE_SIZE, s.TILE_SIZE))
-                surf.fill("brown")
+                surf = self.objects[0]["surf"]
                 rect = surf.get_rect(topleft=pos)
                 self.display_surface.blit(surf, rect)
             if tile.coin:
-                surf = pygame.surface.Surface((s.TILE_SIZE, s.TILE_SIZE))
-                surf.fill("gold")
+                surf = self.objects[1]["surf"]
                 rect = surf.get_rect(topleft=pos)
                 self.display_surface.blit(surf, rect)
 
@@ -147,7 +167,7 @@ class Editor:
         self.display_surface.fill("white")
         self.draw_tile_guides()
         self.draw_level()
-        pygame.draw.circle(self.display_surface, "red", self.origin, 30)
+        pygame.draw.circle(self.display_surface, "red", self.origin, 5)
         self.menu.display()
         return self.mode
 
@@ -163,16 +183,16 @@ class CanvasTile:
 
     def add_id(self, tile_id):
         match tile_id:
-            case "wall":
+            case 0:
                 self.wall = True
-            case "coin":
+            case 1:
                 self.coin = tile_id
 
     def remove_id(self, tile_id):
         match tile_id:
-            case "wall":
+            case 0:
                 self.wall = False
-            case "coin":
+            case 1:
                 self.coin = None
         self.check_content()
 
@@ -187,7 +207,6 @@ class CanvasFloat(pygame.sprite.Sprite):
         self.float_id = float_id
 
         self.image = surf
-        self.image.fill("green")
         self.rect = surf.get_rect(center=pos)
 
         self.distance_to_origin = vector(self.rect.topleft) - origin
