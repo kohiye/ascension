@@ -42,10 +42,16 @@ class Editor:
             if value["frames"]:
                 frames = import_dir(value["frames"])
                 self.animations[key] = {
-                    "frame index": 0,
+                    "frame_index": 0,
                     "frames": frames,
                     "length": len(frames),
                 }
+
+    def animations_update(self, dt):
+        for value in self.animations.values():
+            value["frame_index"] += s.ANIMATION_SPEED * dt
+            if value["frame_index"] >= value["length"]:
+                value["frame_index"] = 0
 
     def event_loop(self):
         for event in pygame.event.get():
@@ -174,7 +180,7 @@ class Editor:
                 self.display_surface.blit(surf, rect)
             if tile.coin:
                 frames = self.animations[tile.coin]["frames"]
-                index = 0
+                index = int(self.animations[tile.coin]["frame_index"])
                 coin_surf = frames[index]
                 rect = coin_surf.get_rect(
                     center=(pos.x + s.TILE_SIZE // 2, pos.y + s.TILE_SIZE // 2)
@@ -183,11 +189,14 @@ class Editor:
 
         self.canvas_floats.draw(self.display_surface)
 
-    def run(self, dt):  # dt for future animations
+    def run(self, dt):
         self.event_loop()
+
+        self.animations_update(dt)
         self.canvas_floats.update(dt)
         self.hold_timer.update()
         self.float_cooldown_timer.update()
+
         self.display_surface.fill("white")
         self.draw_tile_guides()
         self.draw_level()
