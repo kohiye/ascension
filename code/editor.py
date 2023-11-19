@@ -93,6 +93,11 @@ class Editor:
         temp_vect = (vector(mouse_pos()) - self.origin) // s.TILE_SIZE
         return (temp_vect.x, temp_vect.y)
 
+    def mouse_on_float(self):
+        for sprite in self.canvas_floats:
+            if sprite.rect.collidepoint(mouse_pos()):
+                return sprite
+
     def pan_movement(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and mouse_buttons()[1]:
             self.pan_mode = True
@@ -136,6 +141,10 @@ class Editor:
                     self.canvas_data[current_cell].remove_id(self.selection_id)
                     if self.canvas_data[current_cell].is_empty:
                         del self.canvas_data[current_cell]
+
+            selected_float = self.mouse_on_float()
+            if selected_float:
+                selected_float.kill()
 
     def float_drag(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and mouse_buttons()[0]:
