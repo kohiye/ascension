@@ -16,7 +16,6 @@ CANVAS_TEMPLATES = {
     3: {
         "name": "chair",
         "type": "float",
-        "frames": None,
-        "graphics": "../graphics/chair.png",
+        "frames": "../graphics/chair",
     },
 }

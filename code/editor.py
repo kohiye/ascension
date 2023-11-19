@@ -87,7 +87,7 @@ class Editor:
                 self.selection_id += 1
             if event.key == pygame.K_LEFT:
                 self.selection_id -= 1
-        self.selection_id = max(0, min(self.selection_id, 2))
+        self.selection_id = max(0, min(self.selection_id, 4))
 
     def get_current_cell(self):
         temp_vect = (vector(mouse_pos()) - self.origin) // s.TILE_SIZE
@@ -240,6 +240,11 @@ class CanvasFloat(pygame.sprite.Sprite):
         self.float_id = float_id
 
         self.frames = frames
+        if len(self.frames) == 1:
+            self.static = True
+        else:
+            self.static = False
+        print(frames)
         self.frame_index = 0
 
         self.image = self.frames[self.frame_index]
@@ -273,5 +278,6 @@ class CanvasFloat(pygame.sprite.Sprite):
         self.rect.topleft = origin + self.distance_to_origin
 
     def update(self, dt):
-        self.animate(dt)
+        if not self.static:
+            self.animate(dt)
         self.drag()
