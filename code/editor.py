@@ -3,6 +3,7 @@ import sys
 from pygame.math import Vector2 as vector
 from pygame.mouse import get_pressed as mouse_buttons
 from pygame.mouse import get_pos as mouse_pos
+from pygame.image import load
 
 from menu import Menu
 from support import import_dir
@@ -37,6 +38,7 @@ class Editor:
         self.float_drag_active = False
 
     def imports(self):
+        # animations
         self.animations = {}
         for key, value in s.CANVAS_TEMPLATES.items():
             if value["frames"]:
@@ -46,6 +48,11 @@ class Editor:
                     "frames": frames,
                     "length": len(frames),
                 }
+        # preview
+        self.preview_surfs = {
+            key: load(value["preview"]).convert_alpha()
+            for key, value in s.CANVAS_TEMPLATES.items()
+        }
 
     def animations_update(self, dt):
         for value in self.animations.values():
@@ -87,7 +94,7 @@ class Editor:
                 self.selection_id += 1
             if event.key == pygame.K_LEFT:
                 self.selection_id -= 1
-        self.selection_id = max(0, min(self.selection_id, 4))
+        self.selection_id = max(0, min(self.selection_id, 3))
 
     def get_current_cell(self):
         temp_vect = (vector(mouse_pos()) - self.origin) // s.TILE_SIZE
@@ -198,6 +205,77 @@ class Editor:
 
         self.canvas_floats.draw(self.display_surface)
 
+    def draw_float_frame(self):
+        selected_float = self.mouse_on_float()
+        if selected_float:
+            rect = selected_float.rect.inflate(10, 10)
+            color = "black"
+            width = 3
+            size = 15
+            # topleft
+            pygame.draw.lines(
+                self.display_surface,
+                color,
+                False,
+                (
+                    (rect.left, rect.top + size),
+                    rect.topleft,
+                    (rect.left + size, rect.top),
+                ),
+                width,
+            )
+            # topright
+            pygame.draw.lines(
+                self.display_surface,
+                color,
+                False,
+                (
+                    (rect.right - size, rect.top),
+                    rect.topright,
+                    (rect.right, rect.top + size),
+                ),
+                width,
+            )
+            # bottomleft
+            pygame.draw.lines(
+                self.display_surface,
+                color,
+                False,
+                (
+                    (rect.left, rect.bottom - size),
+                    rect.bottomleft,
+                    (rect.left + size, rect.bottom),
+                ),
+                width,
+            )
+            # bottomright
+            pygame.draw.lines(
+                self.display_surface,
+                color,
+                False,
+                (
+                    (rect.right - size, rect.bottom),
+                    rect.bottomright,
+                    (rect.right, rect.bottom - size),
+                ),
+                width,
+            )
+            return True
+
+    def draw_previews(self):
+        type_dict = {key: value["type"] for key, value in s.CANVAS_TEMPLATES.items()}
+        surf = self.preview_surfs[self.selection_id].copy()
+
+        if type_dict[self.selection_id] == "tile":
+            current_cell = self.get_current_cell()
+            rect = surf.get_rect(
+                topleft=self.origin + vector(current_cell) * s.TILE_SIZE
+            )
+        elif type_dict[self.selection_id] == "float":
+            rect = surf.get_rect(center=mouse_pos())
+
+        self.display_surface.blit(surf, rect)
+
     def run(self, dt):
         self.event_loop()
 
@@ -209,6 +287,9 @@ class Editor:
         self.display_surface.fill("white")
         self.draw_tile_guides()
         self.draw_level()
+        if not self.draw_float_frame():
+            self.draw_previews()
+
         pygame.draw.circle(self.display_surface, "red", self.origin, 5)
         self.menu.display()
         return self.mode
