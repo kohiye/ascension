@@ -46,7 +46,7 @@ class Editor:
             frames=self.animations[0]["frames"],
             float_id=0,
             origin=self.origin,
-            group=[self.canvas_floats, self.canvas_midground],
+            groups=[self.canvas_floats, self.canvas_midground],
         )
 
     def imports(self):
@@ -143,12 +143,19 @@ class Editor:
 
                     self.last_cell = current_cell
             if s.CANVAS_TEMPLATES[self.selection_id]["type"] == "float":
+                if s.CANVAS_TEMPLATES[self.selection_id]["ground"] == "fore":
+                    groups = [self.canvas_floats, self.canvas_foregroud]
+                elif s.CANVAS_TEMPLATES[self.selection_id]["ground"] == "mid":
+                    groups = [self.canvas_floats, self.canvas_midground]
+                else:
+                    groups = [self.canvas_floats, self.canvas_backgroud]
+
                 CanvasFloat(
                     pos=mouse_pos(),
                     frames=self.animations[self.selection_id]["frames"],
                     float_id=self.selection_id,
                     origin=self.origin,
-                    group=self.canvas_floats,
+                    groups=groups,
                 )
                 self.float_cooldown_timer.activate()
 
@@ -197,6 +204,7 @@ class Editor:
         self.display_surface.blit(self.guide_surf, (0, 0))
 
     def draw_level(self):
+        self.canvas_backgroud.draw(self.display_surface)
         for cell_pos, tile in self.canvas_data.items():
             pos = self.origin + vector(cell_pos) * s.TILE_SIZE
 
@@ -215,7 +223,8 @@ class Editor:
                 )
                 self.display_surface.blit(coin_surf, rect)
 
-        self.canvas_floats.draw(self.display_surface)
+        self.canvas_midground.draw(self.display_surface)
+        self.canvas_foregroud.draw(self.display_surface)
 
     def draw_float_frame(self):
         selected_float = self.mouse_on_float()
@@ -337,8 +346,8 @@ class CanvasTile:
 
 
 class CanvasFloat(pygame.sprite.Sprite):
-    def __init__(self, pos, frames, float_id, origin, group):
-        super().__init__(group)
+    def __init__(self, pos, frames, float_id, origin, groups):
+        super().__init__(groups)
         self.float_id = float_id
 
         self.frames = frames
