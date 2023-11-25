@@ -2,6 +2,7 @@ import pygame
 import sys
 
 from editor import Editor
+from level import Level
 import settings as s
 
 
@@ -12,9 +13,17 @@ class Main:
             (s.WINDOW_WIDTH, s.WINDOW_HEIGTH)
         )
         self.clock = pygame.time.Clock()
-        self.editor = Editor()
+        self.editor = Editor(self.switch)
+        self.level = Level(self.switch)
 
         self.mode = 1
+
+    def switch(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                self.mode = 0
+            elif event.key == pygame.K_RETURN:
+                self.mode = 2
 
     def run(self):
         while True:
@@ -24,7 +33,9 @@ class Main:
                     pygame.quit()
                     sys.exit()
                 case 1:
-                    self.mode = self.editor.run(dt)
+                    self.editor.run(dt)
+                case 2:
+                    self.level.run(dt)
             pygame.display.update()
 
 

@@ -5,16 +5,17 @@ from pygame.mouse import get_pressed as mouse_buttons
 from pygame.mouse import get_pos as mouse_pos
 from pygame.image import load
 
-from menu import Menu
+from editorMenu import Menu
 from support import import_dir
 import settings as s
 from timer import Timer
 
 
 class Editor:
-    def __init__(self):
+    def __init__(self, switch):
         self.display_surface = pygame.display.get_surface()
         self.menu = Menu()
+        self.switch = switch
 
         self.imports()
 
@@ -22,7 +23,6 @@ class Editor:
         self.pan_mode = False
         self.hold_timer = Timer(200)
         self.pan_offset = vector()
-        self.mode = 1
 
         self.guide_surf = pygame.Surface((s.WINDOW_WIDTH, s.WINDOW_WIDTH))
         self.guide_surf.set_colorkey("green")
@@ -75,7 +75,7 @@ class Editor:
     def event_loop(self):
         for event in pygame.event.get():
             self.hold_checker(event)
-            self.mode_switch(event)
+            self.switch(event)
             self.pan_movement(event)
             self.float_drag(event)
             self.selection_arrows(event)
@@ -93,20 +93,13 @@ class Editor:
             self.hold_timer.deactivate()
             self.hold_timer.activate()
 
-    def mode_switch(self, event):
-        if event.type == pygame.QUIT:
-            self.mode = 0
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                self.mode = 0
-
     def selection_arrows(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RIGHT:
                 self.selection_id += 1
             if event.key == pygame.K_LEFT:
                 self.selection_id -= 1
-        self.selection_id = max(1, min(self.selection_id, 4))
+        self.selection_id = max(1, min(self.selection_id, len(s.CANVAS_TEMPLATES) - 1))
 
     def get_current_cell(self):
         temp_vect = (vector(mouse_pos()) - self.origin) // s.TILE_SIZE
@@ -214,6 +207,9 @@ class Editor:
                 ).convert_alpha()
                 rect = surf.get_rect(topleft=pos)
                 self.display_surface.blit(surf, rect)
+            if tile.air:
+                pass
+
             if tile.coin:
                 frames = self.animations[tile.coin]["frames"]
                 index = int(self.animations[tile.coin]["frame_index"])
@@ -286,6 +282,7 @@ class Editor:
     def draw_previews(self):
         type_dict = {key: value["type"] for key, value in s.CANVAS_TEMPLATES.items()}
         surf = self.preview_surfs[self.selection_id].copy()
+        surf.set_alpha(200)
 
         if type_dict[self.selection_id] == "tile":
             current_cell = self.get_current_cell()
@@ -313,12 +310,12 @@ class Editor:
 
         pygame.draw.circle(self.display_surface, "red", self.origin, 5)
         self.menu.display()
-        return self.mode
 
 
 class CanvasTile:
     def __init__(self, tile_id):
         self.wall = False
+        self.air = False
         self.coin = None
 
         self.is_empty = False
@@ -330,6 +327,8 @@ class CanvasTile:
             case 1:
                 self.wall = True
             case 2:
+                self.air = True
+            case 3:
                 self.coin = tile_id
 
     def remove_id(self, tile_id):
@@ -337,6 +336,8 @@ class CanvasTile:
             case 1:
                 self.wall = False
             case 2:
+                self.air = False
+            case 3:
                 self.coin = None
         self.check_content()
 
