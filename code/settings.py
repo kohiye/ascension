@@ -9,7 +9,7 @@ CANVAS_TEMPLATES = {
         "name": "player",
         "ground": "mid",
         "type": "float",
-        "preview": "../graphics/player/static/1.png",
+        "preview": None,
         "frames": "../graphics/player/static",
     },
     1: {
@@ -47,4 +47,15 @@ CANVAS_TEMPLATES = {
         "preview": "../graphics/chair/static/chair.png",
         "frames": "../graphics/chair/static",
     },
+}
+
+WALL_DIRECTIONS = {
+    "A": (0, -1),
+    "B": (-1, -1),
+    "C": (-1, 0),
+    "D": (-1, 1),
+    "E": (0, 1),
+    "F": (1, 1),
+    "G": (1, 0),
+    "H": (1, -1),
 }

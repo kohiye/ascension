@@ -6,7 +6,7 @@ from pygame.mouse import get_pos as mouse_pos
 from pygame.image import load
 
 from editorMenu import Menu
-from support import import_dir
+from support import import_dir, import_dir_dict
 import settings as s
 from timer import Timer
 
@@ -50,6 +50,10 @@ class Editor:
         )
 
     def imports(self):
+        # tiles
+        self.wall_tiles = import_dir_dict("../graphics/wall")
+        self.air_surf = load("../graphics/air.png").convert_alpha()
+
         # animations
         self.animations = {}
         for key, value in s.CANVAS_TEMPLATES.items():
@@ -64,7 +68,27 @@ class Editor:
         self.preview_surfs = {
             key: load(value["preview"]).convert_alpha()
             for key, value in s.CANVAS_TEMPLATES.items()
+            if value["preview"]
         }
+
+    def check_border(self, cell_pos):
+        cluster = []
+        for col in range(3):
+            for row in range(3):
+                neighbor = (col + cell_pos[0] - 1, row + cell_pos[1] - 1)
+                cluster.append(neighbor)
+
+        print(cluster)
+
+        for cell in cluster:
+            if cell in self.canvas_data:
+                self.canvas_data[cell].wall_neighbors = []
+                for name, place in s.WALL_DIRECTIONS.items():
+                    neighbor_cell = (cell[0] + place[0], cell[1] + place[1])
+
+                    if neighbor_cell in self.canvas_data:
+                        if self.canvas_data[neighbor_cell].air:
+                            self.canvas_data[cell].wall_neighbors.append(name)
 
     def animations_update(self, dt):
         for value in self.animations.values():
@@ -126,7 +150,6 @@ class Editor:
     def canvas_add(self):
         if mouse_buttons()[0] and not self.float_drag_active:
             current_cell = self.get_current_cell()
-            print(s.CANVAS_TEMPLATES[self.selection_id]["type"])
             if s.CANVAS_TEMPLATES[self.selection_id]["type"] == "tile":
                 if current_cell != self.last_cell:
                     if current_cell in self.canvas_data:
@@ -134,6 +157,7 @@ class Editor:
                     else:
                         self.canvas_data[current_cell] = CanvasTile(self.selection_id)
 
+                    # self.check_border(current_cell)
                     self.last_cell = current_cell
             if s.CANVAS_TEMPLATES[self.selection_id]["type"] == "float":
                 if s.CANVAS_TEMPLATES[self.selection_id]["ground"] == "fore":
@@ -188,27 +212,30 @@ class Editor:
 
         for col in range(cols + 1):
             x = origin_offset.x + col * s.TILE_SIZE
-            pygame.draw.line(self.guide_surf, "gray", (x, 0), (x, s.WINDOW_HEIGTH))
+            pygame.draw.line(self.guide_surf, "black", (x, 0), (x, s.WINDOW_HEIGTH))
 
         for row in range(rows + 1):
             y = origin_offset.y + row * s.TILE_SIZE
-            pygame.draw.line(self.guide_surf, "gray", (0, y), (s.WINDOW_WIDTH, y))
+            pygame.draw.line(self.guide_surf, "black", (0, y), (s.WINDOW_WIDTH, y))
 
         self.display_surface.blit(self.guide_surf, (0, 0))
 
     def draw_level(self):
+        for cell_pos, tile in self.canvas_data.items():
+            pos = self.origin + vector(cell_pos) * s.TILE_SIZE
+            if tile.air:
+                self.display_surface.blit(self.air_surf, pos)
+
         self.canvas_backgroud.draw(self.display_surface)
         for cell_pos, tile in self.canvas_data.items():
             pos = self.origin + vector(cell_pos) * s.TILE_SIZE
 
             if tile.wall:
-                surf = pygame.image.load(
-                    s.CANVAS_TEMPLATES[1]["graphics"]
-                ).convert_alpha()
-                rect = surf.get_rect(topleft=pos)
-                self.display_surface.blit(surf, rect)
-            if tile.air:
-                pass
+                if tile.wall_neighbors:
+                    surf = self.wall_tiles[tile.get_wall_name()]
+                else:
+                    surf = self.wall_tiles["X"]
+                self.display_surface.blit(surf, pos)
 
             if tile.coin:
                 frames = self.animations[tile.coin]["frames"]
@@ -303,8 +330,8 @@ class Editor:
         self.float_cooldown_timer.update()
 
         self.display_surface.fill("white")
-        self.draw_tile_guides()
         self.draw_level()
+        self.draw_tile_guides()
         if not self.draw_float_frame():
             self.draw_previews()
 
@@ -320,14 +347,18 @@ class CanvasTile:
 
         self.is_empty = False
 
+        self.wall_neighbors = ["A", "C", "E", "G"]
+
         self.add_id(tile_id)
 
     def add_id(self, tile_id):
         match tile_id:
             case 1:
                 self.wall = True
+                self.air = False
             case 2:
                 self.air = True
+                self.wall = False
             case 3:
                 self.coin = tile_id
 
@@ -342,8 +373,11 @@ class CanvasTile:
         self.check_content()
 
     def check_content(self):
-        if not self.wall and not self.coin:
+        if not self.wall and not self.coin and not self.air:
             self.is_empty = True
+
+    def get_wall_name(self):
+        return "".join(self.wall_neighbors)
 
 
 class CanvasFloat(pygame.sprite.Sprite):
