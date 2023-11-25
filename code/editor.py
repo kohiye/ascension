@@ -31,11 +31,23 @@ class Editor:
         self.canvas_data = {}
         self.last_cell = None
         self.float_cooldown_timer = Timer(100)
-        self.selection_id = 0
+        self.selection_id = 1
 
         # float stuff:
         self.canvas_floats = pygame.sprite.Group()
+        self.canvas_foregroud = pygame.sprite.Group()
+        self.canvas_midground = pygame.sprite.Group()
+        self.canvas_backgroud = pygame.sprite.Group()
         self.float_drag_active = False
+
+        # player
+        CanvasFloat(
+            pos=(400, s.WINDOW_HEIGTH // 2),
+            frames=self.animations[0]["frames"],
+            float_id=0,
+            origin=self.origin,
+            group=[self.canvas_floats, self.canvas_midground],
+        )
 
     def imports(self):
         # animations
@@ -94,7 +106,7 @@ class Editor:
                 self.selection_id += 1
             if event.key == pygame.K_LEFT:
                 self.selection_id -= 1
-        self.selection_id = max(0, min(self.selection_id, 3))
+        self.selection_id = max(1, min(self.selection_id, 4))
 
     def get_current_cell(self):
         temp_vect = (vector(mouse_pos()) - self.origin) // s.TILE_SIZE
@@ -190,7 +202,7 @@ class Editor:
 
             if tile.wall:
                 surf = pygame.image.load(
-                    s.CANVAS_TEMPLATES[0]["graphics"]
+                    s.CANVAS_TEMPLATES[1]["graphics"]
                 ).convert_alpha()
                 rect = surf.get_rect(topleft=pos)
                 self.display_surface.blit(surf, rect)
@@ -271,7 +283,7 @@ class Editor:
             rect = surf.get_rect(
                 topleft=self.origin + vector(current_cell) * s.TILE_SIZE
             )
-        elif type_dict[self.selection_id] == "float":
+        else:
             rect = surf.get_rect(center=mouse_pos())
 
         self.display_surface.blit(surf, rect)
@@ -306,14 +318,14 @@ class CanvasTile:
 
     def add_id(self, tile_id):
         match tile_id:
-            case 0:
+            case 1:
                 self.wall = True
             case 2:
                 self.coin = tile_id
 
     def remove_id(self, tile_id):
         match tile_id:
-            case 0:
+            case 1:
                 self.wall = False
             case 2:
                 self.coin = None

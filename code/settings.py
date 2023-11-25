@@ -6,26 +6,36 @@ ANIMATION_SPEED = 8
 
 CANVAS_TEMPLATES = {
     0: {
+        "name": "player",
+        "ground": "mid",
+        "type": "float",
+        "preview": "../graphics/player/player_pre.png",
+        "frames": "../graphics/player/static",
+    },
+    1: {
         "name": "wall",
         "type": "tile",
         "frames": None,
         "preview": "../graphics/wall_pre.png",
         "graphics": "../graphics/wall.jpg",
     },
-    1: {
-        "name": "player",
-        "type": "float",
-        "preview": "../graphics/player/player_pre.png",
-        "frames": "../graphics/player/static",
-    },
     2: {
         "name": "coin",
+        "ground": "mid",
         "type": "tile",
         "preview": "../graphics/coin/coin_pre.png",
         "frames": "../graphics/coin/static",
     },
     3: {
-        "name": "chair",
+        "name": "chair_fg",
+        "ground": "fore",
+        "type": "float",
+        "preview": "../graphics/chair/chair_pre.png",
+        "frames": "../graphics/chair/static",
+    },
+    4: {
+        "name": "chair_bg",
+        "ground": "back",
         "type": "float",
         "preview": "../graphics/chair/chair_pre.png",
         "frames": "../graphics/chair/static",
