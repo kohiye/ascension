@@ -23,7 +23,10 @@ class Main:
             if event.key == pygame.K_ESCAPE:
                 self.mode = 0
             elif event.key == pygame.K_RETURN:
-                self.mode = 2
+                if self.mode == 2:
+                    self.mode = 1
+                else:
+                    self.mode = 2
 
     def run(self):
         while True:

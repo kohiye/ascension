@@ -1,5 +1,7 @@
 import pygame
 import sys
+import pickle
+
 from pygame.math import Vector2 as vector
 from pygame.mouse import get_pressed as mouse_buttons
 from pygame.mouse import get_pos as mouse_pos
@@ -18,6 +20,7 @@ class Editor:
         self.switch = switch
 
         self.imports()
+        self.export_name = "../saves/level.pickle"
 
         self.origin = vector((s.WINDOW_WIDTH // 2, s.WINDOW_HEIGTH // 2))
         self.pan_mode = False
@@ -71,6 +74,62 @@ class Editor:
             if value["preview"]
         }
 
+    def export_level(self):
+        # pin floats to tiles
+        for tile in self.canvas_data.values():
+            tile.pinned_floats = []
+
+        for sprite in self.canvas_floats:
+            current_cell = self.get_current_cell(sprite.rect.topleft)
+            offset = sprite.distance_to_origin - vector(current_cell) * s.TILE_SIZE
+
+            if current_cell in self.canvas_data:
+                self.canvas_data[current_cell].add_id(sprite.float_id, offset)
+            else:
+                self.canvas_data[current_cell] = CanvasTile(sprite.float_id, offset)
+
+        # pickle me this( converting lvl into a pickle)
+        layers = {
+            "walls": {},
+            "foreground": {},
+            "background": {},
+            "midground": {},
+            "coins": {},
+        }
+
+        for tile_pos, tile in self.canvas_data.items():
+            x = tile_pos[0] * s.TILE_SIZE
+            y = tile_pos[1] * s.TILE_SIZE
+
+            if tile.wall:
+                layers["walls"][(x, y)] = (
+                    tile.get_wall_name()
+                    if tile.get_wall_name() in self.wall_tiles
+                    else "X"
+                )
+            if tile.coin:
+                layers["coins"][
+                    (x + s.TILE_SIZE // 2, y + s.TILE_SIZE // 2)
+                ] = tile.coin
+
+            if tile.pinned_floats:
+                for float_id, offset in tile.pinned_floats:
+                    if s.CANVAS_TEMPLATES[float_id]["ground"] == "mid":
+                        layers["midground"][
+                            (int(x + offset.x), int(y + offset.y))
+                        ] = float_id
+                    elif s.CANVAS_TEMPLATES[float_id]["ground"] == "fore":
+                        layers["foreground"][
+                            (int(x + offset.x), int(y + offset.y))
+                        ] = float_id
+                    else:
+                        layers["background"][
+                            (int(x + offset.x), int(y + offset.y))
+                        ] = float_id
+
+        with open(self.export_name, "wb") as f:
+            pickle.dump(layers, f)
+
     def check_border(self, cell_pos):
         cluster = []
         for col in range(3):
@@ -78,10 +137,8 @@ class Editor:
                 neighbor = (col + cell_pos[0] - 1, row + cell_pos[1] - 1)
                 cluster.append(neighbor)
 
-        print(cluster)
-
         for cell in cluster:
-            if cell in self.canvas_data:
+            if cell in self.canvas_data and self.canvas_data[cell].wall:
                 self.canvas_data[cell].wall_neighbors = []
                 for name, place in s.WALL_DIRECTIONS.items():
                     neighbor_cell = (cell[0] + place[0], cell[1] + place[1])
@@ -104,6 +161,9 @@ class Editor:
             self.float_drag(event)
             self.selection_arrows(event)
 
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                self.export_level()
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 self.canvas_add()
                 self.canvas_remove()
@@ -125,8 +185,8 @@ class Editor:
                 self.selection_id -= 1
         self.selection_id = max(1, min(self.selection_id, len(s.CANVAS_TEMPLATES) - 1))
 
-    def get_current_cell(self):
-        temp_vect = (vector(mouse_pos()) - self.origin) // s.TILE_SIZE
+    def get_current_cell(self, pos):
+        temp_vect = (vector(pos) - self.origin) // s.TILE_SIZE
         return (temp_vect.x, temp_vect.y)
 
     def mouse_on_float(self):
@@ -149,15 +209,17 @@ class Editor:
 
     def canvas_add(self):
         if mouse_buttons()[0] and not self.float_drag_active:
-            current_cell = self.get_current_cell()
+            current_cell = self.get_current_cell(mouse_pos())
             if s.CANVAS_TEMPLATES[self.selection_id]["type"] == "tile":
                 if current_cell != self.last_cell:
                     if current_cell in self.canvas_data:
                         self.canvas_data[current_cell].add_id(self.selection_id)
+                        if self.canvas_data[current_cell].is_empty:
+                            del self.canvas_data[current_cell]
                     else:
                         self.canvas_data[current_cell] = CanvasTile(self.selection_id)
 
-                    # self.check_border(current_cell)
+                    self.check_border(current_cell)
                     self.last_cell = current_cell
             if s.CANVAS_TEMPLATES[self.selection_id]["type"] == "float":
                 if s.CANVAS_TEMPLATES[self.selection_id]["ground"] == "fore":
@@ -179,11 +241,12 @@ class Editor:
     def canvas_remove(self):
         if mouse_buttons()[2]:
             if self.canvas_data:
-                current_cell = self.get_current_cell()
+                current_cell = self.get_current_cell(mouse_pos())
                 if current_cell in self.canvas_data:
                     self.canvas_data[current_cell].remove_id(self.selection_id)
                     if self.canvas_data[current_cell].is_empty:
                         del self.canvas_data[current_cell]
+                    self.check_border(current_cell)
 
             selected_float = self.mouse_on_float()
             if selected_float:
@@ -231,10 +294,11 @@ class Editor:
             pos = self.origin + vector(cell_pos) * s.TILE_SIZE
 
             if tile.wall:
-                if tile.wall_neighbors:
-                    surf = self.wall_tiles[tile.get_wall_name()]
-                else:
-                    surf = self.wall_tiles["X"]
+                surf = self.wall_tiles[
+                    tile.get_wall_name()
+                    if tile.get_wall_name() in self.wall_tiles
+                    else "X"
+                ]
                 self.display_surface.blit(surf, pos)
 
             if tile.coin:
@@ -312,7 +376,7 @@ class Editor:
         surf.set_alpha(200)
 
         if type_dict[self.selection_id] == "tile":
-            current_cell = self.get_current_cell()
+            current_cell = self.get_current_cell(mouse_pos())
             rect = surf.get_rect(
                 topleft=self.origin + vector(current_cell) * s.TILE_SIZE
             )
@@ -340,19 +404,21 @@ class Editor:
 
 
 class CanvasTile:
-    def __init__(self, tile_id):
+    def __init__(self, tile_id, offset=vector()):
         self.wall = False
         self.air = False
         self.coin = None
 
         self.is_empty = False
 
-        self.wall_neighbors = ["A", "C", "E", "G"]
+        self.wall_neighbors = []
 
-        self.add_id(tile_id)
+        self.pinned_floats = []
 
-    def add_id(self, tile_id):
-        match tile_id:
+        self.add_id(tile_id, offset=offset)
+
+    def add_id(self, selection_id, offset=vector()):
+        match selection_id:
             case 1:
                 self.wall = True
                 self.air = False
@@ -360,7 +426,11 @@ class CanvasTile:
                 self.air = True
                 self.wall = False
             case 3:
-                self.coin = tile_id
+                self.coin = selection_id
+
+            case _:
+                if (selection_id, offset) not in self.pinned_floats:
+                    self.pinned_floats.append((selection_id, offset))
 
     def remove_id(self, tile_id):
         match tile_id:
@@ -373,7 +443,7 @@ class CanvasTile:
         self.check_content()
 
     def check_content(self):
-        if not self.wall and not self.coin and not self.air:
+        if not self.wall and not self.coin and not self.air and not self.pinned_floats:
             self.is_empty = True
 
     def get_wall_name(self):
@@ -390,7 +460,6 @@ class CanvasFloat(pygame.sprite.Sprite):
             self.static = True
         else:
             self.static = False
-        print(frames)
         self.frame_index = 0
 
         self.image = self.frames[self.frame_index]
