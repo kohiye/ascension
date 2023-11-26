@@ -14,12 +14,13 @@ from timer import Timer
 
 
 class Editor:
-    def __init__(self, switch):
+    def __init__(self, wall_tiles, switch):
         self.display_surface = pygame.display.get_surface()
         self.menu = Menu()
         self.switch = switch
 
         self.imports()
+        self.wall_tiles = wall_tiles
         self.export_name = "../saves/level.pickle"
 
         self.origin = vector((s.WINDOW_WIDTH // 2, s.WINDOW_HEIGTH // 2))
@@ -54,7 +55,6 @@ class Editor:
 
     def imports(self):
         # tiles
-        self.wall_tiles = import_dir_dict("../graphics/wall")
         self.air_surf = load("../graphics/air.png").convert_alpha()
 
         # animations
@@ -91,6 +91,7 @@ class Editor:
         # pickle me this( converting lvl into a pickle)
         layers = {
             "walls": {},
+            "air": {},
             "foreground": {},
             "background": {},
             "midground": {},
@@ -98,8 +99,8 @@ class Editor:
         }
 
         for tile_pos, tile in self.canvas_data.items():
-            x = tile_pos[0] * s.TILE_SIZE
-            y = tile_pos[1] * s.TILE_SIZE
+            x = int(tile_pos[0] * s.TILE_SIZE + s.WINDOW_WIDTH // 2)
+            y = int(tile_pos[1] * s.TILE_SIZE + s.WINDOW_HEIGTH // 2)
 
             if tile.wall:
                 layers["walls"][(x, y)] = (
@@ -107,6 +108,10 @@ class Editor:
                     if tile.get_wall_name() in self.wall_tiles
                     else "X"
                 )
+
+            if tile.air:
+                layers["air"][(x, y)] = None
+
             if tile.coin:
                 layers["coins"][
                     (x + s.TILE_SIZE // 2, y + s.TILE_SIZE // 2)
@@ -129,6 +134,8 @@ class Editor:
 
         with open(self.export_name, "wb") as f:
             pickle.dump(layers, f)
+        print(layers)
+        return layers
 
     def check_border(self, cell_pos):
         cluster = []
@@ -156,13 +163,17 @@ class Editor:
     def event_loop(self):
         for event in pygame.event.get():
             self.hold_checker(event)
-            self.switch(event)
             self.pan_movement(event)
             self.float_drag(event)
             self.selection_arrows(event)
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
 
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                self.export_level()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                self.switch(event, self.export_level())
+            else:
+                self.switch(event)
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 self.canvas_add()
