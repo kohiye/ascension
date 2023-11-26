@@ -2,6 +2,7 @@ import pygame
 import sys
 
 import settings as s
+from lvlsprites import Generic, Player, Coin, Prop, Enemy
 
 
 class Level:
@@ -14,6 +15,10 @@ class Level:
         self.back_sprites = pygame.sprite.Group()
         self.mid_sprites = pygame.sprite.Group()
         self.wall_sprites = pygame.sprite.Group()
+        self.coin_sprites = pygame.sprite.Group()
+        self.enemy_sprites = pygame.sprite.Group()
+
+        self.money = 0
 
         self.build(lvl_data, asset_dict)
 
@@ -27,6 +32,9 @@ class Level:
                     groups.append(self.fore_sprites)
                 elif layer_name == "background":
                     groups.append(self.back_sprites)
+                elif layer_name == "coins":
+                    groups.append(self.wall_sprites)
+                    groups.append(self.coin_sprites)
                 else:
                     groups.append(self.wall_sprites)
 
@@ -39,12 +47,14 @@ class Level:
 
                 match data:
                     case 0:
-                        Player(pos, groups)
+                        self.player = Player(pos, groups)
 
                     case 4:
                         Prop(pos, asset_dict["chair_fg"], groups)
                     case 5:
                         Prop(pos, asset_dict["chair_bg"], groups)
+                    case 6:
+                        Enemy(pos, groups)
 
     def event_loop(self):
         for event in pygame.event.get():
@@ -53,52 +63,21 @@ class Level:
                 pygame.quit()
                 sys.exit()
 
+    def coin_collision(self):
+        collided_coins = pygame.sprite.spritecollide(
+            self.player, self.coin_sprites, True
+        )
+        for sprite in collided_coins:
+            self.money += 1
+        print(self.money)
+
     def run(self, dt):
         self.event_loop()
         self.generic_sprites.update(dt)
-        self.display_surface.fill("red")
+        self.coin_collision()
+
+        self.display_surface.fill("lightblue")
         self.wall_sprites.draw(self.display_surface)
         self.back_sprites.draw(self.display_surface)
         self.mid_sprites.draw(self.display_surface)
         self.fore_sprites.draw(self.display_surface)
-
-
-class Generic(pygame.sprite.Sprite):
-    def __init__(self, pos, surf, group):
-        super().__init__(group)
-        self.image = surf
-        self.rect = self.image.get_rect(topleft=pos)
-
-
-class Animated(Generic):
-    def __init__(self, pos, frames, group):
-        self.frames = frames
-        self.frame_index = 0
-        super().__init__(pos, self.frames[self.frame_index], group)
-
-    def animate(self, dt):
-        self.frame_index += s.ANIMATION_SPEED * dt
-        self.frame_index = (
-            0 if self.frame_index >= len(self.frames) else self.frame_index
-        )
-        self.image = self.frames[int(self.frame_index)]
-
-    def update(self, dt):
-        self.animate(dt)
-
-
-class Coin(Animated):
-    def __init__(self, pos, frames, group):
-        super().__init__(pos, frames, group)
-        self.rect = self.image.get_rect(center=pos)
-
-
-class Player(Generic):
-    def __init__(self, pos, group):
-        super().__init__(pos, pygame.Surface((100, 100)), group)
-        self.image.fill("black")
-
-
-class Prop(Generic):
-    def __init__(self, pos, surf, group):
-        super().__init__(pos, surf, group)

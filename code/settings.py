@@ -3,6 +3,7 @@ WINDOW_HEIGTH = 720
 TILE_SIZE = 64
 MOUSE_HOLD_LIMIT = 50
 ANIMATION_SPEED = 8
+PLAYER_SPEED = 300
 
 CANVAS_TEMPLATES = {
     0: {
@@ -46,6 +47,13 @@ CANVAS_TEMPLATES = {
         "type": "float",
         "preview": "../graphics/chair/static/chair.png",
         "frames": "../graphics/chair/static",
+    },
+    6: {
+        "name": "enemy",
+        "ground": "mid",
+        "type": "float",
+        "preview": "../graphics/enemy/enemy.png",
+        "frames": "../graphics/enemy",
     },
 }
 
