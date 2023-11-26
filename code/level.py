@@ -17,6 +17,7 @@ class Level:
         self.wall_sprites = pygame.sprite.Group()
         self.coin_sprites = pygame.sprite.Group()
         self.enemy_sprites = pygame.sprite.Group()
+        self.collision_sprites = pygame.sprite.Group()
 
         self.money = 0
 
@@ -39,7 +40,11 @@ class Level:
                     groups.append(self.wall_sprites)
 
                 if layer_name == "walls":
-                    Generic(pos, asset_dict["walls"][data], groups)
+                    Generic(
+                        pos,
+                        asset_dict["walls"][data],
+                        groups + [self.collision_sprites],
+                    )
                 if layer_name == "air":
                     Generic(pos, asset_dict["air"], groups)
                 if layer_name == "coins":
@@ -47,14 +52,14 @@ class Level:
 
                 match data:
                     case 0:
-                        self.player = Player(pos, groups)
+                        self.player = Player(pos, groups, self.collision_sprites)
 
                     case 4:
                         Prop(pos, asset_dict["chair_fg"], groups)
                     case 5:
                         Prop(pos, asset_dict["chair_bg"], groups)
                     case 6:
-                        Enemy(pos, groups)
+                        Enemy(pos, groups + [self.enemy_sprites])
 
     def event_loop(self):
         for event in pygame.event.get():
@@ -69,7 +74,6 @@ class Level:
         )
         for sprite in collided_coins:
             self.money += 1
-        print(self.money)
 
     def run(self, dt):
         self.event_loop()

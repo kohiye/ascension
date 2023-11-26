@@ -134,7 +134,6 @@ class Editor:
 
         with open(self.export_name, "wb") as f:
             pickle.dump(layers, f)
-        print(layers)
         return layers
 
     def check_border(self, cell_pos):

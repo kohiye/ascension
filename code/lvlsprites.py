@@ -35,29 +35,80 @@ class Coin(Animated):
 
 
 class Player(Generic):
-    def __init__(self, pos, group):
-        super().__init__(pos, pygame.Surface((50, 100)), group)
+    def __init__(self, pos, group, collision_sprites):
+        super().__init__(pos, pygame.Surface((90, 127)), group)
         self.image.fill("green")
 
-        self.direction = vector()
-        self.shift = vector(self.rect.topleft)
+        self.speed = vector()
+        self.touch_ground = True
+
+        self.hitbox = self.rect.inflate(-50, -15)
+        self.shift = vector(self.hitbox.topleft)
+        self.collision_sprites = collision_sprites
 
     def input(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_d]:
-            self.direction.x = 1
+            self.speed.x = 1
         elif keys[pygame.K_a]:
-            self.direction.x = -1
+            self.speed.x = -1
         else:
-            self.direction.x = 0
+            self.speed.x = 0
+
+        if keys[pygame.K_w] and self.touch_ground:
+            self.speed.y = -2
 
     def move(self, dt):
-        self.shift += self.direction * s.PLAYER_SPEED * dt
-        self.rect.topleft = (round(self.shift.x), round(self.shift.y))
+        self.shift.x += self.speed.x * s.PLAYER_SPEED * dt
+        self.hitbox.x = round(self.shift.x)
+        self.rect.centerx = self.hitbox.centerx
+        self.collistion_check("X")
+
+        self.gravity_pull(dt)
+        self.hitbox.y = round(self.shift.y)
+        self.rect.centery = self.hitbox.centery
+        self.collistion_check("Y")
+
+    def gravity_pull(self, dt):
+        self.speed.y += s.GRAVITY * dt
+        self.shift.y += self.speed.y
+
+    def check_ground(self):
+        bottom_rect = pygame.Rect(
+            self.hitbox.left, self.hitbox.bottom, self.hitbox.width, 2
+        )
+        ground_sprites = [
+            sprite
+            for sprite in self.collision_sprites
+            if sprite.rect.colliderect(bottom_rect)
+        ]
+        self.touch_ground = True if ground_sprites else False
+
+    def collistion_check(self, direction):
+        for sprite in self.collision_sprites:
+            if sprite.rect.colliderect(self.hitbox):
+                if direction == "X":
+                    if self.speed.x > 0:
+                        self.hitbox.right = sprite.rect.left
+                    if self.speed.x < 0:
+                        self.hitbox.left = sprite.rect.right
+                    self.rect.centerx = self.hitbox.centerx
+                    self.shift.x = self.hitbox.x
+                    self.speed.x = 0
+
+                if direction == "Y":
+                    if self.speed.y > 0:
+                        self.hitbox.bottom = sprite.rect.top
+                    if self.speed.y < 0:
+                        self.hitbox.top = sprite.rect.bottom
+                    self.rect.centery = self.hitbox.centery
+                    self.shift.y = self.hitbox.y
+                    self.speed.y = 0
 
     def update(self, dt):
         self.input()
         self.move(dt)
+        self.check_ground()
 
 
 class Enemy(Generic):
