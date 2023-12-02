@@ -44,7 +44,6 @@ CANVAS_TEMPLATES = {
         "ground": "fore",
         "type": "float",
         "menu": "chair fg",
-    
         "preview": "../graphics/chair/static/chair.png",
         "frames": "../graphics/chair/static",
     },
@@ -63,6 +62,30 @@ CANVAS_TEMPLATES = {
         "menu": "enemy",
         "preview": "../graphics/enemy/enemy.png",
         "frames": "../graphics/enemy",
+    },
+    7: {
+        "name": "ai_node",
+        "ground": "fore",
+        "type": "float",
+        "menu": "enemy",
+        "preview": "../graphics/node/node.png",
+        "frames": "../graphics/node",
+    },
+    8: {
+        "name": "entrance",
+        "ground": "fore",
+        "type": "float",
+        "menu": None,
+        "preview": None,
+        "frames": "../graphics/entrance",
+    },
+    9: {
+        "name": "exit",
+        "ground": "fore",
+        "type": "float",
+        "menu": None,
+        "preview": None,
+        "frames": "../graphics/exit",
     },
 }
 

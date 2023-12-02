@@ -39,9 +39,9 @@ class Editor:
 
         # float stuff:
         self.canvas_floats = pygame.sprite.Group()
-        self.canvas_foregroud = pygame.sprite.Group()
+        self.canvas_foreground = pygame.sprite.Group()
         self.canvas_midground = pygame.sprite.Group()
-        self.canvas_backgroud = pygame.sprite.Group()
+        self.canvas_background = pygame.sprite.Group()
         self.float_drag_active = False
 
         # player
@@ -51,6 +51,21 @@ class Editor:
             float_id=0,
             origin=self.origin,
             groups=[self.canvas_floats, self.canvas_midground],
+        )
+        # doors
+        CanvasFloat(
+            pos=(300, s.WINDOW_HEIGTH // 2),
+            frames=self.animations[8]["frames"],
+            float_id=8,
+            origin=self.origin,
+            groups=[self.canvas_floats, self.canvas_foreground],
+        )
+        CanvasFloat(
+            pos=(800, s.WINDOW_HEIGTH // 2),
+            frames=self.animations[9]["frames"],
+            float_id=9,
+            origin=self.origin,
+            groups=[self.canvas_floats, self.canvas_foreground],
         )
 
     def imports(self):
@@ -194,10 +209,12 @@ class Editor:
                 self.selection_id += 1
             if event.key == pygame.K_LEFT:
                 self.selection_id -= 1
-        self.selection_id = max(1, min(self.selection_id, len(s.CANVAS_TEMPLATES) - 1))
+        self.selection_id = max(1, min(self.selection_id, len(s.CANVAS_TEMPLATES) - 3))
 
     def menu_click(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN and self.menu.rect.collidepoint(mouse_pos()):
+        if event.type == pygame.MOUSEBUTTONDOWN and self.menu.rect.collidepoint(
+            mouse_pos()
+        ):
             new_index = self.menu.click(mouse_pos(), mouse_buttons())
             self.selection_id = new_index if new_index else self.selection_id
 
@@ -224,7 +241,11 @@ class Editor:
                 sprite.pan_pos(self.origin)
 
     def canvas_add(self):
-        if mouse_buttons()[0] and not self.float_drag_active and not self.menu.rect.collidepoint(mouse_pos()):
+        if (
+            mouse_buttons()[0]
+            and not self.float_drag_active
+            and not self.menu.rect.collidepoint(mouse_pos())
+        ):
             current_cell = self.get_current_cell(mouse_pos())
             if s.CANVAS_TEMPLATES[self.selection_id]["type"] == "tile":
                 if current_cell != self.last_cell:
@@ -239,11 +260,11 @@ class Editor:
                     self.last_cell = current_cell
             if s.CANVAS_TEMPLATES[self.selection_id]["type"] == "float":
                 if s.CANVAS_TEMPLATES[self.selection_id]["ground"] == "fore":
-                    groups = [self.canvas_floats, self.canvas_foregroud]
+                    groups = [self.canvas_floats, self.canvas_foreground]
                 elif s.CANVAS_TEMPLATES[self.selection_id]["ground"] == "mid":
                     groups = [self.canvas_floats, self.canvas_midground]
                 else:
-                    groups = [self.canvas_floats, self.canvas_backgroud]
+                    groups = [self.canvas_floats, self.canvas_background]
 
                 CanvasFloat(
                     pos=mouse_pos(),
@@ -305,7 +326,7 @@ class Editor:
             if tile.air:
                 self.display_surface.blit(self.air_surf, pos)
 
-        self.canvas_backgroud.draw(self.display_surface)
+        self.canvas_background.draw(self.display_surface)
         for cell_pos, tile in self.canvas_data.items():
             pos = self.origin + vector(cell_pos) * s.TILE_SIZE
 
@@ -327,7 +348,7 @@ class Editor:
                 self.display_surface.blit(coin_surf, rect)
 
         self.canvas_midground.draw(self.display_surface)
-        self.canvas_foregroud.draw(self.display_surface)
+        self.canvas_foreground.draw(self.display_surface)
 
     def draw_float_frame(self):
         selected_float = self.mouse_on_float()
