@@ -22,3 +22,12 @@ def import_dir_dict(path):
             image_surf = pygame.image.load(full_path).convert_alpha()
             surf_dict[image_name.split(".")[0]] = image_surf
     return surf_dict
+
+
+def signum(number):
+    if number > 0:
+        return 1
+    elif number < 0:
+        return -1
+    else:
+        return 0

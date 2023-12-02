@@ -59,7 +59,12 @@ class Level:
                     case 5:
                         Prop(pos, asset_dict["chair_bg"], groups)
                     case 6:
-                        Enemy(pos, groups + [self.enemy_sprites])
+                        Enemy(
+                            pos,
+                            groups + [self.enemy_sprites],
+                            self.player,
+                            self.collision_sprites,
+                        )
 
     def event_loop(self):
         for event in pygame.event.get():
