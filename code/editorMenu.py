@@ -7,15 +7,15 @@ class Menu:
         self.display_surface = pygame.display.get_surface()
         self.create_data()
         self.create_buttons()
-
+        
     def create_data(self):
         self.menu_surfs = {}
         for key, value in s.CANVAS_TEMPLATES.items():
             if value["menu"]:
                 if not value["menu"] in self.menu_surfs:
-                    self.menu_surfs[value["menu"]] = [(key,load(value["menu_surf"]))]
+                    self.menu_surfs[value["menu"]] = [(key,load(value["preview"]))]
                 else:
-                    self.menu_surfs[value["menu"]].append((key,load(value["menu_surf"])))
+                    self.menu_surfs[value["menu"]].append((key,load(value["preview"])))
 
     def create_buttons(self):
 
@@ -35,7 +35,7 @@ class Menu:
         
         #create the buttons
         self.buttons = pygame.sprite.Group()
-        Button(self.tile_button_rect, self.buttons, self.menu_surfs["terrain"])
+        Button(self.tile_button_rect, self.buttons, self.menu_surfs["wall"])
         Button(self.coin_button_rect, self.buttons, self.menu_surfs["coin"])
         Button(self.enemy_button_rect, self.buttons, self.menu_surfs["enemy"])
         Button(self.chair_button_rect, self.buttons, self.menu_surfs["chair fg"], self.menu_surfs["chair bg"])
@@ -51,7 +51,7 @@ class Menu:
                 return sprite.get_id()
             
     def highlight_indicator(self, index):
-        if s.CANVAS_TEMPLATES[index]["menu"] == "terrain":
+        if s.CANVAS_TEMPLATES[index]["menu"] == "wall":
             pygame.draw.rect(self.display_surface, "#000080", self.tile_button_rect.inflate(4,4),5,4)
         if s.CANVAS_TEMPLATES[index]["menu"] == "coin":
             pygame.draw.rect(self.display_surface, "#000080", self.coin_button_rect.inflate(4,4),5,4)
@@ -73,18 +73,18 @@ class Button(pygame.sprite.Sprite):
 
         #items
         self.items = {"main": items, "alt": items_alt}
-        self.index = 0
+        self.id = 0
         self.main_active = True
 
     def get_id(self):
-        return self.items["main" if self.main_active else "alt"][self.index][0]
+        return self.items["main" if self.main_active else "alt"][self.id][0]
     
     def switch(self):
-        self.index += 1
-        self.index = 0 if self.index >= len(self.items["main" if self.main_active else "alt"]) else self.index
+        self.id += 1
+        self.id = 0 if self.id >= len(self.items["main" if self.main_active else "alt"]) else self.id
 
     def update(self):
         self.image.fill("#0000ff")
-        surf = self.items["main" if self.main_active else "alt"][self.index][1]
+        surf = self.items["main" if self.main_active else "alt"][self.id][1]
         rect = surf.get_rect(center = (self.rect.width / 2, self.rect.height / 2))
         self.image.blit(surf, rect)

@@ -165,6 +165,7 @@ class Editor:
             self.pan_movement(event)
             self.float_drag(event)
             self.selection_arrows(event)
+            self.menu_click(event)
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
@@ -195,6 +196,11 @@ class Editor:
                 self.selection_id -= 1
         self.selection_id = max(1, min(self.selection_id, len(s.CANVAS_TEMPLATES) - 1))
 
+    def menu_click(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and self.menu.rect.collidepoint(mouse_pos()):
+            new_index = self.menu.click(mouse_pos(), mouse_buttons())
+            self.selection_id = new_index if new_index else self.selection_id
+
     def get_current_cell(self, pos):
         temp_vect = (vector(pos) - self.origin) // s.TILE_SIZE
         return (temp_vect.x, temp_vect.y)
@@ -218,7 +224,7 @@ class Editor:
                 sprite.pan_pos(self.origin)
 
     def canvas_add(self):
-        if mouse_buttons()[0] and not self.float_drag_active:
+        if mouse_buttons()[0] and not self.float_drag_active and not self.menu.rect.collidepoint(mouse_pos()):
             current_cell = self.get_current_cell(mouse_pos())
             if s.CANVAS_TEMPLATES[self.selection_id]["type"] == "tile":
                 if current_cell != self.last_cell:
@@ -249,7 +255,7 @@ class Editor:
                 self.float_cooldown_timer.activate()
 
     def canvas_remove(self):
-        if mouse_buttons()[2]:
+        if mouse_buttons()[2] and not self.menu.rect.collidepoint(mouse_pos()):
             if self.canvas_data:
                 current_cell = self.get_current_cell(mouse_pos())
                 if current_cell in self.canvas_data:
@@ -385,15 +391,16 @@ class Editor:
         surf = self.preview_surfs[self.selection_id].copy()
         surf.set_alpha(200)
 
-        if type_dict[self.selection_id] == "tile":
-            current_cell = self.get_current_cell(mouse_pos())
-            rect = surf.get_rect(
-                topleft=self.origin + vector(current_cell) * s.TILE_SIZE
-            )
-        else:
-            rect = surf.get_rect(center=mouse_pos())
+        if not self.menu.rect.collidepoint(mouse_pos()):
+            if type_dict[self.selection_id] == "tile":
+                current_cell = self.get_current_cell(mouse_pos())
+                rect = surf.get_rect(
+                    topleft=self.origin + vector(current_cell) * s.TILE_SIZE
+                )
+            else:
+                rect = surf.get_rect(center=mouse_pos())
 
-        self.display_surface.blit(surf, rect)
+            self.display_surface.blit(surf, rect)
 
     def run(self, dt):
         self.event_loop()
@@ -410,7 +417,7 @@ class Editor:
             self.draw_previews()
 
         pygame.draw.circle(self.display_surface, "red", self.origin, 5)
-        self.menu.display()
+        self.menu.display(self.selection_id)
 
 
 class CanvasTile:
