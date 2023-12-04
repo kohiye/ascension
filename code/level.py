@@ -22,57 +22,70 @@ class Level:
         self.collision_sprites = PlayerCameraGroup()
 
         self.money = 0
+        self.nodes = {}
 
         self.build(lvl_data, asset_dict)
 
     def build(self, lvl_data, asset_dict):
         for layer_name, layer in lvl_data.items():
-            for pos, data in layer.items():
-                groups = [self.generic_sprites]
-                if layer_name == "midground":
-                    groups.append(self.mid_sprites)
-                elif layer_name == "foreground":
-                    groups.append(self.fore_sprites)
-                elif layer_name == "background":
-                    groups.append(self.back_sprites)
-                elif layer_name == "coins":
-                    groups.append(self.wall_sprites)
-                    groups.append(self.coin_sprites)
-                else:
-                    groups.append(self.wall_sprites)
+            if layer_name == "nodes":
+                self.build_nodes(layer)
+            else:
+                self.build_lvl(layer_name, layer, asset_dict)
 
-                if layer_name == "walls":
-                    Generic(
-                        pos,
-                        asset_dict["walls"][data],
-                        groups + [self.collision_sprites],
-                    )
-                if layer_name == "air":
-                    Generic(pos, asset_dict["air"], groups)
-                if layer_name == "coins":
-                    Coin(pos, asset_dict["coin"], groups)
+        for enemy in self.enemy_sprites:
+            enemy.share_data(self.player, self.nodes[enemy.enemy_id])
+        print(self.nodes)
 
-                match data:
-                    case 0:
-                        self.player = Player(pos, groups, self.collision_sprites)
+    def build_nodes(self, layer):
+        for pos, data in layer.items():
+            if data[0] in self.nodes:
+                self.nodes[data[0]][data[1]] = pos
+            else:
+                self.nodes[data[0]] = {data[1]: pos}
 
-                    case 4:
-                        Prop(pos, asset_dict["chair_fg"], groups)
-                    case 5:
-                        Prop(pos, asset_dict["chair_bg"], groups)
-                    case 6:
-                        Enemy(
-                            pos,
-                            groups + [self.enemy_sprites],
-                            self.collision_sprites,
-                        )
-                    case 8:
-                        Prop(pos, asset_dict["entrance"], groups)
-                    case 9:
-                        Prop(pos, asset_dict["exit"], groups)
+    def build_lvl(self, layer_name, layer, asset_dict):
+        for pos, data in layer.items():
+            groups = [self.generic_sprites]
+            if layer_name == "midground":
+                groups.append(self.mid_sprites)
+            elif layer_name == "foreground":
+                groups.append(self.fore_sprites)
+            elif layer_name == "background":
+                groups.append(self.back_sprites)
+            elif layer_name == "coins":
+                groups.append(self.wall_sprites)
+                groups.append(self.coin_sprites)
+            else:
+                groups.append(self.wall_sprites)
 
-            for enemy in self.enemy_sprites:
-                enemy.share_player(self.player)
+            if layer_name == "walls":
+                Generic(
+                    pos,
+                    asset_dict["walls"][data],
+                    groups + [self.collision_sprites],
+                )
+            if layer_name == "air":
+                Generic(pos, asset_dict["air"], groups)
+            if layer_name == "coins":
+                Coin(pos, asset_dict["coin"], groups)
+
+            if layer_name == "enemies":
+                Enemy(pos, groups + [self.enemy_sprites], self.collision_sprites, data)
+                continue
+
+            match data:
+                case 0:
+                    self.player = Player(pos, groups, self.collision_sprites)
+
+                case 4:
+                    Prop(pos, asset_dict["chair_fg"], groups)
+                case 5:
+                    Prop(pos, asset_dict["chair_bg"], groups)
+                case 8:
+                    Prop(pos, asset_dict["entrance"], groups)
+                case 9:
+                    Prop(pos, asset_dict["exit"], groups)
 
     def event_loop(self):
         for event in pygame.event.get():

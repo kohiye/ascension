@@ -85,7 +85,6 @@ class Player(Generic):
         self.offset.x = self.rect.centerx - s.WINDOW_WIDTH // 2
         self.offset.y = self.rect.centery - s.WINDOW_HEIGHT // 2 - 50
         self.gun_vector = vector(mouse_pos()) + self.offset - vector(self.rect.center)
-        print(self.gun_vector)
         angle = self.gun_vector.angle_to(self.face_vector)
 
         self.gun_surf = pygame.transform.rotate(self.gun_surf_temp, angle)
@@ -138,9 +137,12 @@ class Player(Generic):
 
 
 class Enemy(Generic):
-    def __init__(self, pos, group, collision_sprites):
+    def __init__(self, pos, group, collision_sprites, enemy_id):
         super().__init__(pos, pygame.Surface((80, 80)), group)
         self.image.fill("blue")
+
+        self.display_surf = pygame.display.get_surface()
+
         self.speed = vector()
         self.thrust = vector()
         self.drag = vector()
@@ -150,16 +152,26 @@ class Enemy(Generic):
         self.collision_sprites = collision_sprites
         self.last_target = None
         self.target = vector(self.rect.center)
+        self.agro = False
 
         self.hitbox = self.rect.inflate(-40, -40)
         self.repulsion_rect = self.rect.inflate(40, 40)
         self.repulsion = vector()
+        self.offset = vector()
 
-    def share_player(self, player):
+        self.enemy_id = enemy_id
+        self.current_node = 1
+
+    def share_data(self, player, nodes):
         self.player = player
+        self.nodes = nodes
+
+    def offset_sync(self):
+        self.offset.x = self.player.rect.centerx - s.WINDOW_WIDTH // 2
+        self.offset.y = self.player.rect.centery - s.WINDOW_HEIGHT // 2 - 50
 
     def input(self):
-        target_diff = vector(mouse_pos()) - vector(self.rect.center)
+        target_diff = vector(mouse_pos()) + self.offset - vector(self.rect.center)
         if target_diff != vector((0, 0)):
             self.thrust = 500 * target_diff.normalize()
 
@@ -208,6 +220,21 @@ class Enemy(Generic):
         self.collistion_check("Y")
         self.rect.centery = self.hitbox.centery
 
+    def node_route(self):
+        if not self.agro:
+            print(self.nodes)
+            print(self.current_node)
+            current_node_rect = pygame.Rect(
+                self.nodes[self.current_node][0] - 50,
+                self.nodes[self.current_node][1] - 50,
+                100,
+                100,
+            )
+            current_node_surf = pygame.Surface((100, 100))
+            self.display_surf.blit(current_node_surf, current_node_rect)
+            if self.hitbox.colliderect(current_node_rect):
+                print("ho")
+
     def repulsion_check(self):
         self.repulsion = vector()
         for sprite in self.collision_sprites:
@@ -245,6 +272,8 @@ class Enemy(Generic):
                     self.speed.y = -self.speed.y
 
     def update(self, dt):
+        self.offset_sync()
+        self.node_route()
         self.enemy_vision()
         self.input()
         self.move(dt)
