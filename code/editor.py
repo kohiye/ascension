@@ -23,7 +23,7 @@ class Editor:
         self.wall_tiles = wall_tiles
         self.export_name = "../saves/level.pickle"
 
-        self.origin = vector((s.WINDOW_WIDTH // 2, s.WINDOW_HEIGTH // 2))
+        self.origin = vector((s.WINDOW_WIDTH // 2, s.WINDOW_HEIGHT // 2))
         self.pan_mode = False
         self.hold_timer = Timer(200)
         self.pan_offset = vector()
@@ -36,6 +36,7 @@ class Editor:
         self.last_cell = None
         self.float_cooldown_timer = Timer(100)
         self.selection_id = 1
+        self.enemy_id = 1
 
         # float stuff:
         self.canvas_floats = pygame.sprite.Group()
@@ -46,7 +47,7 @@ class Editor:
 
         # player
         CanvasFloat(
-            pos=(400, s.WINDOW_HEIGTH // 2),
+            pos=(400, s.WINDOW_HEIGHT // 2),
             frames=self.animations[0]["frames"],
             float_id=0,
             origin=self.origin,
@@ -54,14 +55,14 @@ class Editor:
         )
         # doors
         CanvasFloat(
-            pos=(300, s.WINDOW_HEIGTH // 2),
+            pos=(300, s.WINDOW_HEIGHT // 2),
             frames=self.animations[8]["frames"],
             float_id=8,
             origin=self.origin,
             groups=[self.canvas_floats, self.canvas_foreground],
         )
         CanvasFloat(
-            pos=(800, s.WINDOW_HEIGTH // 2),
+            pos=(800, s.WINDOW_HEIGHT // 2),
             frames=self.animations[9]["frames"],
             float_id=9,
             origin=self.origin,
@@ -115,7 +116,7 @@ class Editor:
 
         for tile_pos, tile in self.canvas_data.items():
             x = int(tile_pos[0] * s.TILE_SIZE + s.WINDOW_WIDTH // 2)
-            y = int(tile_pos[1] * s.TILE_SIZE + s.WINDOW_HEIGTH // 2)
+            y = int(tile_pos[1] * s.TILE_SIZE + s.WINDOW_HEIGHT // 2)
 
             if tile.wall:
                 layers["walls"][(x, y)] = (
@@ -209,7 +210,14 @@ class Editor:
                 self.selection_id += 1
             if event.key == pygame.K_LEFT:
                 self.selection_id -= 1
+            if self.selection_id in [6, 7]:
+                if event.key == pygame.K_UP:
+                    self.enemy_id += 1
+                if event.key == pygame.K_DOWN:
+                    self.enemy_id -= 1
         self.selection_id = max(1, min(self.selection_id, len(s.CANVAS_TEMPLATES) - 3))
+        self.enemy_id = 0 if self.enemy_id < 0 else self.enemy_id
+        print(self.enemy_id)
 
     def menu_click(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and self.menu.rect.collidepoint(
@@ -286,7 +294,7 @@ class Editor:
                     self.check_border(current_cell)
 
             selected_float = self.mouse_on_float()
-            if selected_float:
+            if selected_float and selected_float.float_id not in [0, 8, 9]:
                 selected_float.kill()
 
     def float_drag(self, event):
@@ -304,7 +312,7 @@ class Editor:
 
     def draw_tile_guides(self):
         cols = s.WINDOW_WIDTH // s.TILE_SIZE
-        rows = s.WINDOW_HEIGTH // s.TILE_SIZE
+        rows = s.WINDOW_HEIGHT // s.TILE_SIZE
 
         origin_offset = vector(self.origin.x % s.TILE_SIZE, self.origin.y % s.TILE_SIZE)
 
@@ -312,7 +320,7 @@ class Editor:
 
         for col in range(cols + 1):
             x = origin_offset.x + col * s.TILE_SIZE
-            pygame.draw.line(self.guide_surf, "black", (x, 0), (x, s.WINDOW_HEIGTH))
+            pygame.draw.line(self.guide_surf, "black", (x, 0), (x, s.WINDOW_HEIGHT))
 
         for row in range(rows + 1):
             y = origin_offset.y + row * s.TILE_SIZE

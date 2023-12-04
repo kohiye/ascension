@@ -1,6 +1,8 @@
 import pygame
 import sys
 
+from pygame.math import Vector2 as vector
+
 import settings as s
 from lvlsprites import Generic, Player, Coin, Prop, Enemy
 
@@ -10,14 +12,14 @@ class Level:
         self.display_surface = pygame.display.get_surface()
         self.switch = switch
 
-        self.generic_sprites = pygame.sprite.Group()
-        self.fore_sprites = pygame.sprite.Group()
-        self.back_sprites = pygame.sprite.Group()
-        self.mid_sprites = pygame.sprite.Group()
-        self.wall_sprites = pygame.sprite.Group()
-        self.coin_sprites = pygame.sprite.Group()
-        self.enemy_sprites = pygame.sprite.Group()
-        self.collision_sprites = pygame.sprite.Group()
+        self.generic_sprites = PlayerCameraGroup()
+        self.fore_sprites = PlayerCameraGroup()
+        self.back_sprites = PlayerCameraGroup()
+        self.mid_sprites = PlayerCameraGroup()
+        self.wall_sprites = PlayerCameraGroup()
+        self.coin_sprites = PlayerCameraGroup()
+        self.enemy_sprites = PlayerCameraGroup()
+        self.collision_sprites = PlayerCameraGroup()
 
         self.money = 0
 
@@ -62,9 +64,15 @@ class Level:
                         Enemy(
                             pos,
                             groups + [self.enemy_sprites],
-                            self.player,
                             self.collision_sprites,
                         )
+                    case 8:
+                        Prop(pos, asset_dict["entrance"], groups)
+                    case 9:
+                        Prop(pos, asset_dict["exit"], groups)
+
+            for enemy in self.enemy_sprites:
+                enemy.share_player(self.player)
 
     def event_loop(self):
         for event in pygame.event.get():
@@ -86,7 +94,27 @@ class Level:
         self.coin_collision()
 
         self.display_surface.fill("lightblue")
-        self.wall_sprites.draw(self.display_surface)
-        self.back_sprites.draw(self.display_surface)
-        self.mid_sprites.draw(self.display_surface)
-        self.fore_sprites.draw(self.display_surface)
+        self.wall_sprites.camera_draw(self.player)
+        self.back_sprites.camera_draw(self.player)
+        self.mid_sprites.camera_draw(self.player)
+        self.fore_sprites.camera_draw(self.player)
+
+
+class PlayerCameraGroup(pygame.sprite.Group):
+    def __init__(self):
+        super().__init__()
+        self.display_surface = pygame.display.get_surface()
+        self.offset = vector()
+
+    def camera_draw(self, player):
+        self.offset.x = player.rect.centerx - s.WINDOW_WIDTH // 2
+        self.offset.y = player.rect.centery - s.WINDOW_HEIGHT // 2 - 50
+
+        for sprite in self:
+            offset_rect = sprite.rect.copy()
+            offset_rect.center -= self.offset
+            self.display_surface.blit(sprite.image, offset_rect)
+
+        gun_rect = player.gun_rect.copy()
+        gun_rect.center -= self.offset
+        self.display_surface.blit(player.gun_surf, gun_rect)

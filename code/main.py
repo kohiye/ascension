@@ -15,7 +15,7 @@ class Main:
     def __init__(self):
         pygame.init()
         self.display_surface = pygame.display.set_mode(
-            (s.WINDOW_WIDTH, s.WINDOW_HEIGTH)
+            (s.WINDOW_WIDTH, s.WINDOW_HEIGHT)
         )
         self.clock = pygame.time.Clock()
 
@@ -32,6 +32,8 @@ class Main:
         self.coin_frames = import_dir("../graphics/coin/static")
         self.chair_fg = load("../graphics/chair/static/chair.png").convert_alpha()
         self.chair_bg = load("../graphics/chair/static/chair.png").convert_alpha()
+        self.exit = load("../graphics/exit/exit.png").convert_alpha()
+        self.entrance = load("../graphics/entrance/entrance.png").convert_alpha()
 
     def switch(self, event, lvl_data=None):
         if event.type == pygame.KEYDOWN:
@@ -54,6 +56,8 @@ class Main:
                             "coin": self.coin_frames,
                             "chair_fg": self.chair_fg,
                             "chair_bg": self.chair_bg,
+                            "exit": self.exit,
+                            "entrance": self.entrance,
                         },
                     )
 

@@ -1,5 +1,8 @@
 import pygame
+from math import atan2
+
 from pygame.math import Vector2 as vector
+from pygame.mouse import get_pos as mouse_pos
 
 import settings as s
 from support import signum
@@ -47,6 +50,15 @@ class Player(Generic):
         self.shift = vector(self.hitbox.topleft)
         self.collision_sprites = collision_sprites
 
+        # gun
+        self.face_vector = vector(1, 0)
+        self.gun_surf_temp = pygame.image.load("../graphics/gun.png").convert_alpha()
+        self.gun_rect = self.gun_surf_temp.get_rect(center=self.rect.center)
+        self.gun_vector = vector(self.gun_rect.center) - vector(mouse_pos())
+        self.offset = vector()
+
+        self.gun_surf = self.gun_surf_temp.copy()
+
     def input(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_d]:
@@ -69,6 +81,16 @@ class Player(Generic):
         self.hitbox.y = round(self.shift.y)
         self.rect.centery = self.hitbox.centery
         self.collistion_check("Y")
+
+        self.offset.x = self.rect.centerx - s.WINDOW_WIDTH // 2
+        self.offset.y = self.rect.centery - s.WINDOW_HEIGHT // 2 - 50
+        self.gun_vector = vector(mouse_pos()) + self.offset - vector(self.rect.center)
+        print(self.gun_vector)
+        angle = self.gun_vector.angle_to(self.face_vector)
+
+        self.gun_surf = pygame.transform.rotate(self.gun_surf_temp, angle)
+        self.gun_rect = self.gun_surf.get_rect()
+        self.gun_rect.center = self.rect.center
 
     def gravity_pull(self, dt):
         self.speed.y += s.GRAVITY * dt
@@ -106,6 +128,9 @@ class Player(Generic):
                     self.shift.y = self.hitbox.y
                     self.speed.y = 0
 
+    def get_gun(self):
+        return self.gun_surf
+
     def update(self, dt):
         self.input()
         self.move(dt)
@@ -113,7 +138,7 @@ class Player(Generic):
 
 
 class Enemy(Generic):
-    def __init__(self, pos, group, player, collision_sprites):
+    def __init__(self, pos, group, collision_sprites):
         super().__init__(pos, pygame.Surface((80, 80)), group)
         self.image.fill("blue")
         self.speed = vector()
@@ -122,7 +147,6 @@ class Enemy(Generic):
         self.shift = vector(self.rect.topleft)
         self.drag_coeff = 0.01
 
-        self.player = player
         self.collision_sprites = collision_sprites
         self.last_target = None
         self.target = vector(self.rect.center)
@@ -131,8 +155,11 @@ class Enemy(Generic):
         self.repulsion_rect = self.rect.inflate(40, 40)
         self.repulsion = vector()
 
+    def share_player(self, player):
+        self.player = player
+
     def input(self):
-        target_diff = vector(pygame.mouse.get_pos()) - vector(self.rect.center)
+        target_diff = vector(mouse_pos()) - vector(self.rect.center)
         if target_diff != vector((0, 0)):
             self.thrust = 500 * target_diff.normalize()
 

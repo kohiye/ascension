@@ -1,5 +1,5 @@
 WINDOW_WIDTH = 1280
-WINDOW_HEIGTH = 720
+WINDOW_HEIGHT = 720
 TILE_SIZE = 64
 MOUSE_HOLD_LIMIT = 50
 ANIMATION_SPEED = 8
@@ -73,7 +73,7 @@ CANVAS_TEMPLATES = {
     },
     8: {
         "name": "entrance",
-        "ground": "fore",
+        "ground": "back",
         "type": "float",
         "menu": None,
         "preview": None,
@@ -81,7 +81,7 @@ CANVAS_TEMPLATES = {
     },
     9: {
         "name": "exit",
-        "ground": "fore",
+        "ground": "back",
         "type": "float",
         "menu": None,
         "preview": None,
