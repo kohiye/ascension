@@ -46,14 +46,6 @@ class Editor:
         self.canvas_background = pygame.sprite.Group()
         self.float_drag_active = False
 
-        # player
-        CanvasFloat(
-            pos=(400, s.WINDOW_HEIGHT // 2),
-            frames=self.animations[0]["frames"],
-            float_id=0,
-            origin=self.origin,
-            groups=[self.canvas_floats, self.canvas_midground],
-        )
         # doors
         CanvasFloat(
             pos=(300, s.WINDOW_HEIGHT // 2),
@@ -147,7 +139,9 @@ class Editor:
                             2
                         ][0]
                     elif pin[0] == 7:
-                        layers["nodes"][(int(x + pin[1].x), int(y + pin[1].y))] = pin[2]
+                        layers["nodes"][
+                            (int(x + pin[1].x + 32), int(y + pin[1].y + 32))
+                        ] = pin[2]
 
                     elif s.CANVAS_TEMPLATES[pin[0]]["ground"] == "mid":
                         layers["midground"][

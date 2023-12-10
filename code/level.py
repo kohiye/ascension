@@ -20,6 +20,7 @@ class Level:
         self.coin_sprites = PlayerCameraGroup()
         self.enemy_sprites = PlayerCameraGroup()
         self.collision_sprites = PlayerCameraGroup()
+        self.exit_door_group = PlayerCameraGroup()
 
         self.money = 0
         self.nodes = {}
@@ -34,8 +35,11 @@ class Level:
                 self.build_lvl(layer_name, layer, asset_dict)
 
         for enemy in self.enemy_sprites:
-            enemy.share_data(self.player, self.nodes[enemy.enemy_id])
-        print(self.nodes)
+            if enemy.enemy_id in self.nodes:
+                nodes = self.nodes[enemy.enemy_id]
+            else:
+                nodes = None
+            enemy.share_data(self.player, nodes)
 
     def build_nodes(self, layer):
         for pos, data in layer.items():
@@ -75,17 +79,16 @@ class Level:
                 continue
 
             match data:
-                case 0:
-                    self.player = Player(pos, groups, self.collision_sprites)
-
                 case 4:
                     Prop(pos, asset_dict["chair_fg"], groups)
                 case 5:
                     Prop(pos, asset_dict["chair_bg"], groups)
                 case 8:
                     Prop(pos, asset_dict["entrance"], groups)
+                    player_pos = (pos[0] + 70, pos[1])
+                    self.player = Player(player_pos, groups, self.collision_sprites)
                 case 9:
-                    Prop(pos, asset_dict["exit"], groups)
+                    Prop(pos, asset_dict["exit"], groups + [self.exit_door_group])
 
     def event_loop(self):
         for event in pygame.event.get():
@@ -101,10 +104,15 @@ class Level:
         for sprite in collided_coins:
             self.money += 1
 
+    def door_exit(self):
+        if pygame.sprite.spritecollide(self.player, self.exit_door_group, False):
+            self.switch("lvl_exit")
+
     def run(self, dt):
         self.event_loop()
         self.generic_sprites.update(dt)
         self.coin_collision()
+        self.door_exit()
 
         self.display_surface.fill("lightblue")
         self.wall_sprites.camera_draw(self.player)

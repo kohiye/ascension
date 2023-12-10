@@ -3,8 +3,10 @@ from math import atan2
 
 from pygame.math import Vector2 as vector
 from pygame.mouse import get_pos as mouse_pos
+from pygame.mouse import get_pressed as mouse_buttons
 
 import settings as s
+from timer import Timer
 from support import signum
 
 
@@ -56,6 +58,8 @@ class Player(Generic):
         self.gun_rect = self.gun_surf_temp.get_rect(center=self.rect.center)
         self.gun_vector = vector(self.gun_rect.center) - vector(mouse_pos())
         self.offset = vector()
+        self.ammo = 10
+        self.gun_cooldown = Timer(100)
 
         self.gun_surf = self.gun_surf_temp.copy()
 
@@ -130,10 +134,20 @@ class Player(Generic):
     def get_gun(self):
         return self.gun_surf
 
+    def shoot(self):
+        if self.ammo and not self.gun_cooldown.active and mouse_buttons()[0]:
+            self.ammo -= 1
+            self.gun_cooldown.activate()
+            self.image.fill("orange")
+            # print("booom ", self.ammo)
+
     def update(self, dt):
+        self.image.fill("green")
         self.input()
         self.move(dt)
+        self.shoot()
         self.check_ground()
+        self.gun_cooldown.update()
 
 
 class Enemy(Generic):
@@ -150,17 +164,20 @@ class Enemy(Generic):
         self.drag_coeff = 0.01
 
         self.collision_sprites = collision_sprites
-        self.last_target = None
-        self.target = vector(self.rect.center)
+        self.last_target = vector(self.rect.center)
+        self.node_target = None
+        self.target = self.last_target
         self.agro = False
+        self.agro_timer = Timer(10000)
 
         self.hitbox = self.rect.inflate(-40, -40)
         self.repulsion_rect = self.rect.inflate(40, 40)
+        self.player_repulsion_rect = self.rect.inflate(400, 400)
         self.repulsion = vector()
         self.offset = vector()
 
         self.enemy_id = enemy_id
-        self.current_node = 1
+        self.node_index = 1
 
     def share_data(self, player, nodes):
         self.player = player
@@ -171,9 +188,13 @@ class Enemy(Generic):
         self.offset.y = self.player.rect.centery - s.WINDOW_HEIGHT // 2 - 50
 
     def input(self):
-        target_diff = vector(mouse_pos()) + self.offset - vector(self.rect.center)
+        target_diff = self.target - vector(self.rect.center)
         if target_diff != vector((0, 0)):
             self.thrust = 500 * target_diff.normalize()
+
+    def attack(self):
+        if self.agro:
+            pass
 
     def enemy_vision(self):
         obstuctions = []
@@ -181,10 +202,27 @@ class Enemy(Generic):
             if sprite.rect.clipline(self.player.rect.center, self.rect.center):
                 obstuctions.append(sprite)
 
-        if obstuctions:
-            self.terget = self.last_target
+        if obstuctions and self.agro:
+            self.target = self.last_target
+            self.image.fill("orange")
+            dist_to_target = vector(self.hitbox.center) - vector(self.target)
+            if dist_to_target.magnitude() < 40:
+                if not self.agro_timer.active:
+                    self.agro_timer.activate()
+                else:
+                    self.agro_timer.update()
+                if not self.agro_timer.active:
+                    self.agro = False
+
+        elif obstuctions and not self.agro:
+            if self.node_target:
+                self.target = self.node_target
+            else:
+                self.target = self.last_target
             self.image.fill("blue")
+
         else:
+            self.agro = True
             self.target = vector(self.player.rect.center)
             self.last_target = self.target
             self.image.fill("red")
@@ -204,36 +242,55 @@ class Enemy(Generic):
     def move(self, dt):
         self.friction()
         self.repulsion_check()
+        self.player_repulsion_check()
 
-        self.speed.x += (self.thrust.x + self.drag.x + 200 * self.repulsion.x) * dt
-        self.speed.y += (self.thrust.y + self.drag.y + 200 * self.repulsion.y) * dt
+        self.speed.x += (
+            self.thrust.x
+            + self.drag.x
+            + 200 * self.repulsion.x
+            + 4000 * self.player_repulsion.x
+        ) * dt
+        self.speed.y += (
+            self.thrust.y
+            + self.drag.y
+            + 200 * self.repulsion.y
+            + 4000 * self.player_repulsion.y
+        ) * dt
 
         self.shift.x += self.speed.x * dt
         self.hitbox.x = round(self.shift.x)
         self.repulsion_rect.centerx = self.hitbox.centerx
+        self.player_repulsion_rect.centerx = self.hitbox.centerx
         self.collistion_check("X")
         self.rect.centerx = self.hitbox.centerx
 
         self.shift.y += self.speed.y * dt
         self.hitbox.y = round(self.shift.y)
         self.repulsion_rect.centery = self.hitbox.centery
+        self.player_repulsion_rect.centery = self.hitbox.centery
         self.collistion_check("Y")
         self.rect.centery = self.hitbox.centery
 
     def node_route(self):
-        if not self.agro:
-            print(self.nodes)
-            print(self.current_node)
-            current_node_rect = pygame.Rect(
-                self.nodes[self.current_node][0] - 50,
-                self.nodes[self.current_node][1] - 50,
-                100,
-                100,
+        if not self.agro and self.nodes:
+            self.node_target = vector(self.nodes[self.node_index])
+            dist_to_node = vector(self.hitbox.center) - vector(
+                self.nodes[self.node_index]
             )
-            current_node_surf = pygame.Surface((100, 100))
-            self.display_surf.blit(current_node_surf, current_node_rect)
-            if self.hitbox.colliderect(current_node_rect):
-                print("ho")
+            if dist_to_node.magnitude() < 40:
+                self.node_index += 1
+            if self.node_index > len(self.nodes):
+                self.node_index = 1
+
+    def player_repulsion_check(self):
+        self.player_repulsion = vector()
+        if self.player.rect.colliderect(self.player_repulsion_rect):
+            repulsion_distance = vector(self.rect.center) - vector(
+                self.player.rect.center
+            )
+            self.player_repulsion = repulsion_distance.normalize() * (
+                100 / repulsion_distance.magnitude()
+            )
 
     def repulsion_check(self):
         self.repulsion = vector()
@@ -282,3 +339,6 @@ class Enemy(Generic):
 class Prop(Generic):
     def __init__(self, pos, surf, group):
         super().__init__(pos, surf, group)
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self):

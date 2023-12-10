@@ -6,6 +6,7 @@ from pygame.image import load
 from editor import Editor
 from level import Level
 from menu import Menu
+from exit_screen import Score
 
 import settings as s
 from support import import_dir, import_dir_dict
@@ -22,6 +23,7 @@ class Main:
         self.imports()
 
         self.menu = Menu(self.switch)
+        self.exit_screen = Score(self.switch)
         self.editor = Editor(self.wall_tiles, self.switch)
 
         self.mode = 1
@@ -36,16 +38,18 @@ class Main:
         self.entrance = load("../graphics/entrance/entrance.png").convert_alpha()
 
     def switch(self, event, lvl_data=None):
-        if event.type == pygame.KEYDOWN:
+        if event == "lvl_exit":
+            self.mode = 3
+        elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 if self.mode == 0:
                     pygame.quit()
                     sys.exit()
                 self.mode = 0
             elif event.key == pygame.K_RETURN:
-                if self.mode == 2:
+                if self.mode == (0 or 2 or 3):
                     self.mode = 1
-                else:
+                elif self.mode == 1:
                     self.mode = 2
                     self.level = Level(
                         lvl_data,
@@ -71,6 +75,8 @@ class Main:
                     self.editor.run(dt)
                 case 2:
                     self.level.run(dt)
+                case 3:
+                    self.exit_screen.display(dt)
             pygame.display.update()
 
 
