@@ -47,7 +47,7 @@ class Main:
                     sys.exit()
                 self.mode = 0
             elif event.key == pygame.K_RETURN:
-                if self.mode == (0 or 2 or 3):
+                if self.mode in [0, 2, 3]:
                     self.mode = 1
                 elif self.mode == 1:
                     self.mode = 2

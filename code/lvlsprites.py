@@ -41,7 +41,7 @@ class Coin(Animated):
 
 
 class Player(Generic):
-    def __init__(self, pos, group, collision_sprites):
+    def __init__(self, pos, group, collision_sprites, player_bullets):
         super().__init__(pos, pygame.Surface((90, 127)), group)
         self.image.fill("green")
 
@@ -58,8 +58,10 @@ class Player(Generic):
         self.gun_rect = self.gun_surf_temp.get_rect(center=self.rect.center)
         self.gun_vector = vector(self.gun_rect.center) - vector(mouse_pos())
         self.offset = vector()
-        self.ammo = 10
+        self.ammo = 1000
         self.gun_cooldown = Timer(100)
+
+        self.player_bullets = player_bullets
 
         self.gun_surf = self.gun_surf_temp.copy()
 
@@ -74,6 +76,9 @@ class Player(Generic):
 
         if keys[pygame.K_w] and self.touch_ground:
             self.speed.y = -2
+
+    def take_damage(self):
+        pass
 
     def move(self, dt):
         self.shift.x += self.speed.x * s.PLAYER_SPEED * dt
@@ -138,8 +143,7 @@ class Player(Generic):
         if self.ammo and not self.gun_cooldown.active and mouse_buttons()[0]:
             self.ammo -= 1
             self.gun_cooldown.activate()
-            self.image.fill("orange")
-            # print("booom ", self.ammo)
+            Bullet(self.rect.center, self.gun_vector.normalize(), self.player_bullets)
 
     def update(self, dt):
         self.image.fill("green")
@@ -151,7 +155,7 @@ class Player(Generic):
 
 
 class Enemy(Generic):
-    def __init__(self, pos, group, collision_sprites, enemy_id):
+    def __init__(self, pos, group, collision_sprites, enemy_id, enemy_bullets):
         super().__init__(pos, pygame.Surface((80, 80)), group)
         self.image.fill("blue")
 
@@ -179,6 +183,11 @@ class Enemy(Generic):
         self.enemy_id = enemy_id
         self.node_index = 1
 
+        self.health = 10
+
+        self.enemy_bullets = enemy_bullets
+        self.shoot_cooldown = Timer(100)
+
     def share_data(self, player, nodes):
         self.player = player
         self.nodes = nodes
@@ -193,8 +202,10 @@ class Enemy(Generic):
             self.thrust = 500 * target_diff.normalize()
 
     def attack(self):
-        if self.agro:
-            pass
+        if self.agro and not self.shoot_cooldown.active:
+            self.shoot_cooldown.activate()
+            target_vector = self.target - vector(self.rect.center)
+            Bullet(self.rect.center, target_vector.normalize(), self.enemy_bullets)
 
     def enemy_vision(self):
         obstuctions = []
@@ -334,11 +345,29 @@ class Enemy(Generic):
         self.enemy_vision()
         self.input()
         self.move(dt)
+        self.attack()
+        self.shoot_cooldown.update()
 
 
 class Prop(Generic):
     def __init__(self, pos, surf, group):
         super().__init__(pos, surf, group)
 
+
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, pos, direction, groups):
+        super().__init__(groups)
+        self.groups = groups
+        self.image = pygame.Surface((5, 5))
+        self.rect = self.image.get_rect(center=pos)
+        self.direction = direction
+        self.shift = vector(self.rect.topleft)
+
+    def move(self, dt):
+        nudge = dt * 500 * self.direction
+        self.shift += nudge
+        self.rect.x = round(self.shift.x)
+        self.rect.y = round(self.shift.y)
+
+    def update(self, dt):
+        self.move(dt)

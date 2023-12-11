@@ -22,7 +22,12 @@ class Level:
         self.collision_sprites = PlayerCameraGroup()
         self.exit_door_group = PlayerCameraGroup()
 
+        self.player_bullets = PlayerCameraGroup()
+        self.enemy_bullets = PlayerCameraGroup()
+
         self.money = 0
+        self.player_health = 10
+
         self.nodes = {}
 
         self.build(lvl_data, asset_dict)
@@ -75,7 +80,13 @@ class Level:
                 Coin(pos, asset_dict["coin"], groups)
 
             if layer_name == "enemies":
-                Enemy(pos, groups + [self.enemy_sprites], self.collision_sprites, data)
+                Enemy(
+                    pos,
+                    groups + [self.enemy_sprites],
+                    self.collision_sprites,
+                    data,
+                    self.enemy_bullets,
+                )
                 continue
 
             match data:
@@ -86,7 +97,9 @@ class Level:
                 case 8:
                     Prop(pos, asset_dict["entrance"], groups)
                     player_pos = (pos[0] + 70, pos[1])
-                    self.player = Player(player_pos, groups, self.collision_sprites)
+                    self.player = Player(
+                        player_pos, groups, self.collision_sprites, self.player_bullets
+                    )
                 case 9:
                     Prop(pos, asset_dict["exit"], groups + [self.exit_door_group])
 
@@ -104,6 +117,25 @@ class Level:
         for sprite in collided_coins:
             self.money += 1
 
+    def enemy_hit(self):
+        hits = pygame.sprite.groupcollide(
+            self.enemy_sprites, self.player_bullets, False, True
+        )
+        if hits:
+            for enemy, points in hits.items():
+                enemy.health -= len(points)
+
+                if enemy.health <= 0:
+                    enemy.kill()
+
+    def player_hit(self):
+        hits = pygame.sprite.spritecollide(self.player, self.enemy_bullets, True)
+        for sprite in hits:
+            self.player_health -= 1
+
+        if self.player_health <= 0:
+            self.switch("lvl_exit")
+
     def door_exit(self):
         if pygame.sprite.spritecollide(self.player, self.exit_door_group, False):
             self.switch("lvl_exit")
@@ -111,14 +143,29 @@ class Level:
     def run(self, dt):
         self.event_loop()
         self.generic_sprites.update(dt)
+        self.player_bullets.update(dt)
+        self.enemy_bullets.update(dt)
         self.coin_collision()
+        self.enemy_hit()
+        self.player_hit()
         self.door_exit()
 
         self.display_surface.fill("lightblue")
         self.wall_sprites.camera_draw(self.player)
         self.back_sprites.camera_draw(self.player)
         self.mid_sprites.camera_draw(self.player)
+
+        self.offset = vector()
+        self.offset.x = self.player.rect.centerx - s.WINDOW_WIDTH // 2
+        self.offset.y = self.player.rect.centery - s.WINDOW_HEIGHT // 2 - 50
+        gun_rect = self.player.gun_rect.copy()
+        gun_rect.topleft -= self.offset
+        self.display_surface.blit(self.player.gun_surf, gun_rect)
+
         self.fore_sprites.camera_draw(self.player)
+
+        self.player_bullets.camera_draw(self.player)
+        self.enemy_bullets.camera_draw(self.player)
 
 
 class PlayerCameraGroup(pygame.sprite.Group):
@@ -135,7 +182,3 @@ class PlayerCameraGroup(pygame.sprite.Group):
             offset_rect = sprite.rect.copy()
             offset_rect.center -= self.offset
             self.display_surface.blit(sprite.image, offset_rect)
-
-        gun_rect = player.gun_rect.copy()
-        gun_rect.center -= self.offset
-        self.display_surface.blit(player.gun_surf, gun_rect)
