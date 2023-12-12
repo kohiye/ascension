@@ -96,7 +96,7 @@ class Level:
                     Prop(pos, asset_dict["chair_bg"], groups)
                 case 8:
                     Prop(pos, asset_dict["entrance"], groups)
-                    player_pos = (pos[0] + 70, pos[1])
+                    player_pos = (pos[0] + s.PLAYER_DOOR_SPAWN_DISTANCE, pos[1])
                     self.player = Player(
                         player_pos, groups, self.collision_sprites, self.player_bullets
                     )
@@ -140,11 +140,20 @@ class Level:
         if pygame.sprite.spritecollide(self.player, self.exit_door_group, False):
             self.switch("lvl_exit")
 
+    def bullet_wall_collison(self):
+        enemy_collisions = pygame.sprite.groupcollide(
+            self.collision_sprites, self.enemy_bullets, False, True
+        )
+        player_collisions = pygame.sprite.groupcollide(
+            self.collision_sprites, self.player_bullets, False, True
+        )
+
     def run(self, dt):
         self.event_loop()
         self.generic_sprites.update(dt)
         self.player_bullets.update(dt)
         self.enemy_bullets.update(dt)
+        self.bullet_wall_collison()
         self.coin_collision()
         self.enemy_hit()
         self.player_hit()
@@ -157,7 +166,9 @@ class Level:
 
         self.offset = vector()
         self.offset.x = self.player.rect.centerx - s.WINDOW_WIDTH // 2
-        self.offset.y = self.player.rect.centery - s.WINDOW_HEIGHT // 2 - 50
+        self.offset.y = (
+            self.player.rect.centery - s.WINDOW_HEIGHT // 2 - s.CAMERA_Y_SHIFT
+        )
         gun_rect = self.player.gun_rect.copy()
         gun_rect.topleft -= self.offset
         self.display_surface.blit(self.player.gun_surf, gun_rect)
@@ -176,7 +187,7 @@ class PlayerCameraGroup(pygame.sprite.Group):
 
     def camera_draw(self, player):
         self.offset.x = player.rect.centerx - s.WINDOW_WIDTH // 2
-        self.offset.y = player.rect.centery - s.WINDOW_HEIGHT // 2 - 50
+        self.offset.y = player.rect.centery - s.WINDOW_HEIGHT // 2 - s.CAMERA_Y_SHIFT
 
         for sprite in self:
             offset_rect = sprite.rect.copy()

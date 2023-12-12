@@ -92,7 +92,7 @@ class Player(Generic):
         self.collistion_check("Y")
 
         self.offset.x = self.rect.centerx - s.WINDOW_WIDTH // 2
-        self.offset.y = self.rect.centery - s.WINDOW_HEIGHT // 2 - 50
+        self.offset.y = self.rect.centery - s.WINDOW_HEIGHT // 2 - s.CAMERA_Y_SHIFT
         self.gun_vector = vector(mouse_pos()) + self.offset - vector(self.rect.center)
         angle = self.gun_vector.angle_to(self.face_vector)
 
@@ -176,7 +176,9 @@ class Enemy(Generic):
 
         self.hitbox = self.rect.inflate(-40, -40)
         self.repulsion_rect = self.rect.inflate(40, 40)
-        self.player_repulsion_rect = self.rect.inflate(400, 400)
+        self.player_repulsion_rect = self.rect.inflate(
+            s.ENEMY_PLAYER_REPULSION, s.ENEMY_PLAYER_REPULSION
+        )
         self.repulsion = vector()
         self.offset = vector()
 
@@ -194,7 +196,9 @@ class Enemy(Generic):
 
     def offset_sync(self):
         self.offset.x = self.player.rect.centerx - s.WINDOW_WIDTH // 2
-        self.offset.y = self.player.rect.centery - s.WINDOW_HEIGHT // 2 - 50
+        self.offset.y = (
+            self.player.rect.centery - s.WINDOW_HEIGHT // 2 - s.CAMERA_Y_SHIFT
+        )
 
     def input(self):
         target_diff = self.target - vector(self.rect.center)
@@ -363,11 +367,17 @@ class Bullet(pygame.sprite.Sprite):
         self.direction = direction
         self.shift = vector(self.rect.topleft)
 
+        self.life_timer = Timer(s.BULLET_LIFE_TIME_MS)
+        self.life_timer.activate()
+
     def move(self, dt):
-        nudge = dt * 500 * self.direction
+        nudge = dt * s.BULLET_SPEED * self.direction
         self.shift += nudge
         self.rect.x = round(self.shift.x)
         self.rect.y = round(self.shift.y)
 
     def update(self, dt):
         self.move(dt)
+        self.life_timer.update()
+        if not self.life_timer.active:
+            self.kill()
