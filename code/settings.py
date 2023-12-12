@@ -1,10 +1,15 @@
 WINDOW_WIDTH = 1280
-WINDOW_HEIGTH = 720
+WINDOW_HEIGHT = 720
 TILE_SIZE = 64
 MOUSE_HOLD_LIMIT = 50
 ANIMATION_SPEED = 8
 PLAYER_SPEED = 300
 GRAVITY = 5
+BULLET_SPEED = 500
+BULLET_LIFE_TIME_MS = 10000
+CAMERA_Y_SHIFT = 50
+ENEMY_PLAYER_REPULSION = 400
+PLAYER_DOOR_SPAWN_DISTANCE = 70
 
 CANVAS_TEMPLATES = {
     0: {
@@ -44,7 +49,6 @@ CANVAS_TEMPLATES = {
         "ground": "fore",
         "type": "float",
         "menu": "chair fg",
-    
         "preview": "../graphics/chair/static/chair.png",
         "frames": "../graphics/chair/static",
     },
@@ -63,6 +67,30 @@ CANVAS_TEMPLATES = {
         "menu": "enemy",
         "preview": "../graphics/enemy/enemy.png",
         "frames": "../graphics/enemy",
+    },
+    7: {
+        "name": "ai_node",
+        "ground": "fore",
+        "type": "float",
+        "menu": "enemy",
+        "preview": "../graphics/node/node.png",
+        "frames": "../graphics/node",
+    },
+    8: {
+        "name": "entrance",
+        "ground": "back",
+        "type": "float",
+        "menu": None,
+        "preview": None,
+        "frames": "../graphics/entrance",
+    },
+    9: {
+        "name": "exit",
+        "ground": "back",
+        "type": "float",
+        "menu": None,
+        "preview": None,
+        "frames": "../graphics/exit",
     },
 }
 

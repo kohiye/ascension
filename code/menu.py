@@ -10,7 +10,7 @@ class Menu:
 
         self.buttons = pygame.sprite.Group()
         Button(
-            pygame.Rect(s.WINDOW_WIDTH // 2 - 50, s.WINDOW_HEIGTH // 2 - 50, 100, 100),
+            pygame.Rect(s.WINDOW_WIDTH // 2 - 50, s.WINDOW_HEIGHT // 2 - 50, 100, 100),
             self.buttons,
         )
 

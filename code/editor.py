@@ -23,7 +23,7 @@ class Editor:
         self.wall_tiles = wall_tiles
         self.export_name = "../saves/level.pickle"
 
-        self.origin = vector((s.WINDOW_WIDTH // 2, s.WINDOW_HEIGTH // 2))
+        self.origin = vector((s.WINDOW_WIDTH // 2, s.WINDOW_HEIGHT // 2))
         self.pan_mode = False
         self.hold_timer = Timer(200)
         self.pan_offset = vector()
@@ -36,21 +36,30 @@ class Editor:
         self.last_cell = None
         self.float_cooldown_timer = Timer(100)
         self.selection_id = 1
+        self.enemy_id = 1
+        self.node_dict = {}
 
         # float stuff:
         self.canvas_floats = pygame.sprite.Group()
-        self.canvas_foregroud = pygame.sprite.Group()
+        self.canvas_foreground = pygame.sprite.Group()
         self.canvas_midground = pygame.sprite.Group()
-        self.canvas_backgroud = pygame.sprite.Group()
+        self.canvas_background = pygame.sprite.Group()
         self.float_drag_active = False
 
-        # player
+        # doors
         CanvasFloat(
-            pos=(400, s.WINDOW_HEIGTH // 2),
-            frames=self.animations[0]["frames"],
-            float_id=0,
+            pos=(300, s.WINDOW_HEIGHT // 2),
+            frames=self.animations[8]["frames"],
+            float_id=8,
             origin=self.origin,
-            groups=[self.canvas_floats, self.canvas_midground],
+            groups=[self.canvas_floats, self.canvas_foreground],
+        )
+        CanvasFloat(
+            pos=(800, s.WINDOW_HEIGHT // 2),
+            frames=self.animations[9]["frames"],
+            float_id=9,
+            origin=self.origin,
+            groups=[self.canvas_floats, self.canvas_foreground],
         )
 
     def imports(self):
@@ -84,9 +93,13 @@ class Editor:
             offset = sprite.distance_to_origin - vector(current_cell) * s.TILE_SIZE
 
             if current_cell in self.canvas_data:
-                self.canvas_data[current_cell].add_id(sprite.float_id, offset)
+                self.canvas_data[current_cell].add_id(
+                    sprite.float_id, offset, sprite.node_id
+                )
             else:
-                self.canvas_data[current_cell] = CanvasTile(sprite.float_id, offset)
+                self.canvas_data[current_cell] = CanvasTile(
+                    sprite.float_id, offset, sprite.node_id
+                )
 
         # pickle me this( converting lvl into a pickle)
         layers = {
@@ -96,11 +109,13 @@ class Editor:
             "background": {},
             "midground": {},
             "coins": {},
+            "nodes": {},
+            "enemies": {},
         }
 
         for tile_pos, tile in self.canvas_data.items():
             x = int(tile_pos[0] * s.TILE_SIZE + s.WINDOW_WIDTH // 2)
-            y = int(tile_pos[1] * s.TILE_SIZE + s.WINDOW_HEIGTH // 2)
+            y = int(tile_pos[1] * s.TILE_SIZE + s.WINDOW_HEIGHT // 2)
 
             if tile.wall:
                 layers["walls"][(x, y)] = (
@@ -118,19 +133,28 @@ class Editor:
                 ] = tile.coin
 
             if tile.pinned_floats:
-                for float_id, offset in tile.pinned_floats:
-                    if s.CANVAS_TEMPLATES[float_id]["ground"] == "mid":
+                for pin in tile.pinned_floats:
+                    if pin[0] == 6:
+                        layers["enemies"][(int(x + pin[1].x), int(y + pin[1].y))] = pin[
+                            2
+                        ][0]
+                    elif pin[0] == 7:
+                        layers["nodes"][
+                            (int(x + pin[1].x + 32), int(y + pin[1].y + 32))
+                        ] = pin[2]
+
+                    elif s.CANVAS_TEMPLATES[pin[0]]["ground"] == "mid":
                         layers["midground"][
-                            (int(x + offset.x), int(y + offset.y))
-                        ] = float_id
-                    elif s.CANVAS_TEMPLATES[float_id]["ground"] == "fore":
+                            (int(x + pin[1].x), int(y + pin[1].y))
+                        ] = pin[0]
+                    elif s.CANVAS_TEMPLATES[pin[0]]["ground"] == "fore":
                         layers["foreground"][
-                            (int(x + offset.x), int(y + offset.y))
-                        ] = float_id
+                            (int(x + pin[1].x), int(y + pin[1].y))
+                        ] = pin[0]
                     else:
                         layers["background"][
-                            (int(x + offset.x), int(y + offset.y))
-                        ] = float_id
+                            (int(x + pin[1].x), int(y + pin[1].y))
+                        ] = pin[0]
 
         with open(self.export_name, "wb") as f:
             pickle.dump(layers, f)
@@ -194,10 +218,18 @@ class Editor:
                 self.selection_id += 1
             if event.key == pygame.K_LEFT:
                 self.selection_id -= 1
-        self.selection_id = max(1, min(self.selection_id, len(s.CANVAS_TEMPLATES) - 1))
+            if self.selection_id in [6, 7]:
+                if event.key == pygame.K_UP:
+                    self.enemy_id += 1
+                if event.key == pygame.K_DOWN:
+                    self.enemy_id -= 1
+        self.selection_id = max(1, min(self.selection_id, len(s.CANVAS_TEMPLATES) - 3))
+        self.enemy_id = 0 if self.enemy_id < 0 else self.enemy_id
 
     def menu_click(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN and self.menu.rect.collidepoint(mouse_pos()):
+        if event.type == pygame.MOUSEBUTTONDOWN and self.menu.rect.collidepoint(
+            mouse_pos()
+        ):
             new_index = self.menu.click(mouse_pos(), mouse_buttons())
             self.selection_id = new_index if new_index else self.selection_id
 
@@ -224,7 +256,11 @@ class Editor:
                 sprite.pan_pos(self.origin)
 
     def canvas_add(self):
-        if mouse_buttons()[0] and not self.float_drag_active and not self.menu.rect.collidepoint(mouse_pos()):
+        if (
+            mouse_buttons()[0]
+            and not self.float_drag_active
+            and not self.menu.rect.collidepoint(mouse_pos())
+        ):
             current_cell = self.get_current_cell(mouse_pos())
             if s.CANVAS_TEMPLATES[self.selection_id]["type"] == "tile":
                 if current_cell != self.last_cell:
@@ -239,11 +275,30 @@ class Editor:
                     self.last_cell = current_cell
             if s.CANVAS_TEMPLATES[self.selection_id]["type"] == "float":
                 if s.CANVAS_TEMPLATES[self.selection_id]["ground"] == "fore":
-                    groups = [self.canvas_floats, self.canvas_foregroud]
+                    groups = [self.canvas_floats, self.canvas_foreground]
                 elif s.CANVAS_TEMPLATES[self.selection_id]["ground"] == "mid":
                     groups = [self.canvas_floats, self.canvas_midground]
                 else:
-                    groups = [self.canvas_floats, self.canvas_backgroud]
+                    groups = [self.canvas_floats, self.canvas_background]
+
+                # node add logic
+                if self.selection_id == 6:
+                    self.change_enemy_id()
+                    self.node_dict[self.enemy_id] = []
+                    node_id = (self.enemy_id, 0)
+                elif self.selection_id == 7:
+                    if self.enemy_id in self.node_dict:
+                        if self.node_dict[self.enemy_id]:
+                            node_index = self.node_dict[self.enemy_id][-1] + 1
+                        else:
+                            node_index = 1
+
+                        node_id = (self.enemy_id, node_index)
+                        self.node_dict[self.enemy_id].append(node_index)
+                    else:
+                        return
+                else:
+                    node_id = None
 
                 CanvasFloat(
                     pos=mouse_pos(),
@@ -251,8 +306,14 @@ class Editor:
                     float_id=self.selection_id,
                     origin=self.origin,
                     groups=groups,
+                    node_id=node_id,
                 )
                 self.float_cooldown_timer.activate()
+
+    def change_enemy_id(self):
+        if self.enemy_id in self.node_dict:
+            self.enemy_id += 1
+            self.change_enemy_id()
 
     def canvas_remove(self):
         if mouse_buttons()[2] and not self.menu.rect.collidepoint(mouse_pos()):
@@ -265,7 +326,15 @@ class Editor:
                     self.check_border(current_cell)
 
             selected_float = self.mouse_on_float()
-            if selected_float:
+            if selected_float and selected_float.float_id not in [0, 8, 9]:
+                if selected_float.float_id == 6:
+                    del self.node_dict[selected_float.enemy_id]
+                    for sprite in self.canvas_floats:
+                        if (
+                            sprite.float_id == 7
+                            and sprite.node_id[0] == selected_float.enemy_id
+                        ):
+                            sprite.kill()
                 selected_float.kill()
 
     def float_drag(self, event):
@@ -283,7 +352,7 @@ class Editor:
 
     def draw_tile_guides(self):
         cols = s.WINDOW_WIDTH // s.TILE_SIZE
-        rows = s.WINDOW_HEIGTH // s.TILE_SIZE
+        rows = s.WINDOW_HEIGHT // s.TILE_SIZE
 
         origin_offset = vector(self.origin.x % s.TILE_SIZE, self.origin.y % s.TILE_SIZE)
 
@@ -291,7 +360,7 @@ class Editor:
 
         for col in range(cols + 1):
             x = origin_offset.x + col * s.TILE_SIZE
-            pygame.draw.line(self.guide_surf, "black", (x, 0), (x, s.WINDOW_HEIGTH))
+            pygame.draw.line(self.guide_surf, "black", (x, 0), (x, s.WINDOW_HEIGHT))
 
         for row in range(rows + 1):
             y = origin_offset.y + row * s.TILE_SIZE
@@ -305,7 +374,7 @@ class Editor:
             if tile.air:
                 self.display_surface.blit(self.air_surf, pos)
 
-        self.canvas_backgroud.draw(self.display_surface)
+        self.canvas_background.draw(self.display_surface)
         for cell_pos, tile in self.canvas_data.items():
             pos = self.origin + vector(cell_pos) * s.TILE_SIZE
 
@@ -327,7 +396,7 @@ class Editor:
                 self.display_surface.blit(coin_surf, rect)
 
         self.canvas_midground.draw(self.display_surface)
-        self.canvas_foregroud.draw(self.display_surface)
+        self.canvas_foreground.draw(self.display_surface)
 
     def draw_float_frame(self):
         selected_float = self.mouse_on_float()
@@ -421,7 +490,7 @@ class Editor:
 
 
 class CanvasTile:
-    def __init__(self, tile_id, offset=vector()):
+    def __init__(self, tile_id, offset=vector(), node_id=None):
         self.wall = False
         self.air = False
         self.coin = None
@@ -432,9 +501,9 @@ class CanvasTile:
 
         self.pinned_floats = []
 
-        self.add_id(tile_id, offset=offset)
+        self.add_id(tile_id, offset=offset, node_id=node_id)
 
-    def add_id(self, selection_id, offset=vector()):
+    def add_id(self, selection_id, offset=vector(), node_id=None):
         match selection_id:
             case 1:
                 self.wall = True
@@ -446,8 +515,8 @@ class CanvasTile:
                 self.coin = selection_id
 
             case _:
-                if (selection_id, offset) not in self.pinned_floats:
-                    self.pinned_floats.append((selection_id, offset))
+                if (selection_id, offset, node_id) not in self.pinned_floats:
+                    self.pinned_floats.append((selection_id, offset, node_id))
 
     def remove_id(self, tile_id):
         match tile_id:
@@ -468,9 +537,16 @@ class CanvasTile:
 
 
 class CanvasFloat(pygame.sprite.Sprite):
-    def __init__(self, pos, frames, float_id, origin, groups):
+    def __init__(self, pos, frames, float_id, origin, groups, node_id=None):
         super().__init__(groups)
         self.float_id = float_id
+        self.node_id = node_id
+
+        if self.node_id:
+            if self.node_id[1] == 0:
+                self.enemy_id = self.node_id[0]
+        else:
+            self.enemy_id = None
 
         self.frames = frames
         if len(self.frames) == 1:
