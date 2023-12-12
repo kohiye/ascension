@@ -60,6 +60,8 @@ class Player(Generic):
         self.offset = vector()
         self.ammo = 1000
         self.gun_cooldown = Timer(100)
+        self.gun_sound = pygame.mixer.Sound("../audio/gun.mp3")
+        self.gun_sound.set_volume(s.VOLUME)
 
         self.player_bullets = player_bullets
 
@@ -141,6 +143,7 @@ class Player(Generic):
 
     def shoot(self):
         if self.ammo and not self.gun_cooldown.active and mouse_buttons()[0]:
+            self.gun_sound.play()
             self.ammo -= 1
             self.gun_cooldown.activate()
             Bullet(self.rect.center, self.gun_vector.normalize(), self.player_bullets)

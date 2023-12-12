@@ -1,4 +1,6 @@
 import pygame
+from pygame.mouse import get_pressed as mouse_buttons
+from pygame.mouse import get_pos as mouse_pos
 
 import settings as s
 
@@ -7,12 +9,35 @@ class Menu:
     def __init__(self, switch):
         self.display_surface = pygame.display.get_surface()
         self.switch = switch
+        self.font = pygame.font.Font("../font/Pixeltype.ttf", 50)
+        self.exit_text_surf = self.font.render("QUIT", False, "black")
+        self.continue_text_surf = self.font.render("CONTINUE", False, "black")
 
         self.buttons = pygame.sprite.Group()
         Button(
-            pygame.Rect(s.WINDOW_WIDTH // 2 - 50, s.WINDOW_HEIGHT // 2 - 50, 100, 100),
+            self.exit_text_surf,
+            pygame.Rect(
+                s.WINDOW_WIDTH // 2 - 100, s.WINDOW_HEIGHT // 2 - 50 + 200, 200, 100
+            ),
             self.buttons,
+            "exit",
         )
+        Button(
+            self.continue_text_surf,
+            pygame.Rect(
+                s.WINDOW_WIDTH // 2 - 100, s.WINDOW_HEIGHT // 2 - 50 - 200, 200, 100
+            ),
+            self.buttons,
+            "continue",
+        )
+
+    def click(self):
+        for sprite in self.buttons:
+            if sprite.rect.collidepoint(mouse_pos()):
+                if mouse_buttons()[0]:
+                    return sprite.id
+                else:
+                    return None
 
     def event_loop(self):
         for event in pygame.event.get():
@@ -25,10 +50,13 @@ class Menu:
 
 
 class Button(pygame.sprite.Sprite):
-    def __init__(self, rect, group):
+    def __init__(self, surf, rect, group, id):
         super().__init__(group)
-        self.image = pygame.Surface(rect.size)
+        self.image = pygame.Surface((200, 100))
+        self.image.fill("green")
+        self.image.blit(surf, (25, 25))
         self.rect = rect
+        self.id = id
 
     def update(self):
         self.image.fill("blue")

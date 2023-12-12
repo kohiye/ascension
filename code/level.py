@@ -5,12 +5,18 @@ from pygame.math import Vector2 as vector
 
 import settings as s
 from lvlsprites import Generic, Player, Coin, Prop, Enemy
+from gameMenu import Menu
 
 
 class Level:
     def __init__(self, lvl_data, switch, asset_dict):
         self.display_surface = pygame.display.get_surface()
         self.switch = switch
+
+        self.menu = Menu()
+
+        self.coin_sound = pygame.mixer.Sound("../audio/coin.mp3")
+        self.coin_sound.set_volume(s.VOLUME)
 
         self.generic_sprites = PlayerCameraGroup()
         self.fore_sprites = PlayerCameraGroup()
@@ -116,6 +122,7 @@ class Level:
         )
         for sprite in collided_coins:
             self.money += 1
+            self.coin_sound.play()
 
     def enemy_hit(self):
         hits = pygame.sprite.groupcollide(
@@ -127,6 +134,8 @@ class Level:
 
                 if enemy.health <= 0:
                     enemy.kill()
+                    self.money += 10
+                    self.coin_sound.play()
 
     def player_hit(self):
         hits = pygame.sprite.spritecollide(self.player, self.enemy_bullets, True)

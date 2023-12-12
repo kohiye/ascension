@@ -15,6 +15,7 @@ from support import import_dir, import_dir_dict
 class Main:
     def __init__(self):
         pygame.init()
+        pygame.mixer.set_num_channels(30)
         self.display_surface = pygame.display.set_mode(
             (s.WINDOW_WIDTH, s.WINDOW_HEIGHT)
         )
@@ -26,7 +27,7 @@ class Main:
         self.exit_screen = Score(self.switch)
         self.editor = Editor(self.wall_tiles, self.switch)
 
-        self.mode = 1
+        self.mode = 0
 
     def imports(self):
         self.wall_tiles = import_dir_dict("../graphics/wall")
@@ -36,6 +37,16 @@ class Main:
         self.chair_bg = load("../graphics/chair/static/chair.png").convert_alpha()
         self.exit = load("../graphics/exit/exit.png").convert_alpha()
         self.entrance = load("../graphics/entrance/entrance.png").convert_alpha()
+
+    def main_menu_click(self):
+        id = self.menu.click()
+        if id and self.mode == 0:
+            if id == "exit":
+                pygame.quit()
+                sys.exit()
+
+            elif id == "continue":
+                self.mode = 1
 
     def switch(self, event, lvl_data=None):
         if event == "lvl_exit":
@@ -67,6 +78,7 @@ class Main:
 
     def run(self):
         while True:
+            self.main_menu_click()
             dt = self.clock.tick() / 1000
             match self.mode:
                 case 0:
