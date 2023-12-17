@@ -7,7 +7,6 @@ import settings as s
 from lvlsprites import Generic, Player, Coin, Prop, Enemy
 from gameMenu import Menu
 
-
 class Level:
     def __init__(self, lvl_data, switch, asset_dict):
         self.display_surface = pygame.display.get_surface()
@@ -32,7 +31,7 @@ class Level:
         self.enemy_bullets = PlayerCameraGroup()
 
         self.money = 0
-        self.player_health = 10
+        self.player_health = 15
 
         self.nodes = {}
 
@@ -143,7 +142,7 @@ class Level:
             self.player_health -= 1
 
         if self.player_health <= 0:
-            self.switch("lvl_exit")
+            self.switch("death")
 
     def door_exit(self):
         if pygame.sprite.spritecollide(self.player, self.exit_door_group, False):

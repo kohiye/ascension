@@ -3,7 +3,7 @@ import pygame
 import settings as s
 
 
-class Score:
+class Result:
     def __init__(self, switch):
         self.display_surface = pygame.display.get_surface()
         self.switch = switch
@@ -17,7 +17,7 @@ class Score:
         self.display_surface.fill("black")
 
         self.font = pygame.font.Font("../font/Pixeltype.ttf", 50)
-        text = self.font.render("Level completed", True, "white")
+        text = self.font.render("You died", True, "white")
         text_rect = text.get_rect(center=(s.WINDOW_HEIGHT // 2 + 280, s.WINDOW_WIDTH // 2 - 500))
         self.display_surface.blit(text, text_rect)
 
