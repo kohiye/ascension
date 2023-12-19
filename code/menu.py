@@ -7,18 +7,18 @@ import settings as s
 
 class Menu:
     def __init__(self, switch):
-        self.menu = pygame.image.load("../graphics/menu.png").convert_alpha()
+        self.menu = pygame.image.load("../graphics/menu.JPG").convert_alpha()
         self.display_surface = pygame.display.get_surface()
         self.switch = switch
         self.font = pygame.font.Font("../font/Pixeltype.ttf", 50)
-        self.exit_text_surf = self.font.render("     Quit", False, "black")
-        self.editor_text_surf = self.font.render("   Editor", False, "black")
+        self.exit_text_surf = self.font.render("   Quit", False, "white")
+        self.editor_text_surf = self.font.render("Editor", False, "white")
 
         self.buttons = pygame.sprite.Group()
         Button(
             self.exit_text_surf,
             pygame.Rect(
-                s.WINDOW_WIDTH // 2 - 100, s.WINDOW_HEIGHT // 2 - 50 + 150, 200, 100
+                s.WINDOW_WIDTH // 2 - 75, s.WINDOW_HEIGHT // 2 - 50 + 100, 200, 100
             ),
             self.buttons,
             "exit",
@@ -26,7 +26,7 @@ class Menu:
         Button(
             self.editor_text_surf,
             pygame.Rect(
-                s.WINDOW_WIDTH // 2 - 100, s.WINDOW_HEIGHT // 2 - 50 - 150, 200, 100
+                s.WINDOW_WIDTH // 2 - 70, s.WINDOW_HEIGHT // 2 - 50 - 100, 200, 100
             ),
             self.buttons,
             "editor",
@@ -53,9 +53,9 @@ class Menu:
 class Button(pygame.sprite.Sprite):
     def __init__(self, surf, rect, group, id):
         super().__init__(group)
-        self.image = pygame.Surface((175, 75))
-        self.image.fill(s.GREEN)
-        self.image.blit(surf, (25, 25))
+        self.image = pygame.Surface((150, 50))
+        self.image.fill("black")
+        self.image.blit(surf, (30, 15))
         self.rect = rect
         self.id = id
 
