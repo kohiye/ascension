@@ -51,8 +51,8 @@ class Menu:
         Button(
             self.chair_button_rect,
             self.buttons,
-            self.menu_surfs["chair fg"],
-            self.menu_surfs["chair bg"],
+            self.menu_surfs["environment fg"],
+            self.menu_surfs["environment bg"],
         )
 
     def click(self, mouse_pos, mouse_button):
@@ -90,7 +90,7 @@ class Menu:
                 5,
                 4,
             )
-        if s.CANVAS_TEMPLATES[index]["menu"] in ("chair bg", "chair fg"):
+        if s.CANVAS_TEMPLATES[index]["menu"] in ("environment bg", "environment fg"):
             pygame.draw.rect(
                 self.display_surface,
                 "#000080",

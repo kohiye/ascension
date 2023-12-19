@@ -33,8 +33,14 @@ class Main:
         self.wall_tiles = import_dir_dict("../graphics/wall")
         self.air_surf = load("../graphics/air.png").convert_alpha()
         self.coin_frames = import_dir("../graphics/coin/static")
-        self.chair_fg = load("../graphics/chair/static/chair.png").convert_alpha()
-        self.chair_bg = load("../graphics/chair/static/chair.png").convert_alpha()
+        self.chairR_fg = load("../graphics/chairR/static/chairR.png").convert_alpha()
+        self.chairR_bg = load("../graphics/chairR/static/chairR.png").convert_alpha()
+        self.chairL_fg = load("../graphics/chairL/static/chairL.png").convert_alpha()
+        self.chairL_bg = load("../graphics/chairL/static/chairL.png").convert_alpha()
+        self.box_fg = load("../graphics/box/static/box.png").convert_alpha()
+        self.box_bg = load("../graphics/box/static/box.png").convert_alpha()
+        self.table_fg = load("../graphics/table/static/table.png").convert_alpha()
+        self.table_bg = load("../graphics/table/static/table.png").convert_alpha()
         self.exit = load("../graphics/exit/exit.png").convert_alpha()
         self.entrance = load("../graphics/entrance/entrance.png").convert_alpha()
 
@@ -73,8 +79,14 @@ class Main:
                             "walls": self.wall_tiles,
                             "air": self.air_surf,
                             "coin": self.coin_frames,
-                            "chair_fg": self.chair_fg,
-                            "chair_bg": self.chair_bg,
+                            "chairR_fg": self.chairR_fg,
+                            "chairR_bg": self.chairR_bg,
+                            "chairL_fg": self.chairL_fg,
+                            "chairL_bg": self.chairL_bg,
+                            "table_fg": self.table_fg,
+                            "table_bg": self.table_bg,
+                            "box_fg" : self.box_fg,
+                            "box_bg" : self.box_bg,
                             "exit": self.exit,
                             "entrance": self.entrance,
                         },

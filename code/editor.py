@@ -49,15 +49,15 @@ class Editor:
         # doors
         CanvasFloat(
             pos=(300, s.WINDOW_HEIGHT // 2),
-            frames=self.animations[8]["frames"],
-            float_id=8,
+            frames=self.animations[14]["frames"],
+            float_id=14,
             origin=self.origin,
             groups=[self.canvas_floats, self.canvas_foreground],
         )
         CanvasFloat(
             pos=(800, s.WINDOW_HEIGHT // 2),
-            frames=self.animations[9]["frames"],
-            float_id=9,
+            frames=self.animations[15]["frames"],
+            float_id=15,
             origin=self.origin,
             groups=[self.canvas_floats, self.canvas_foreground],
         )
@@ -134,11 +134,11 @@ class Editor:
 
             if tile.pinned_floats:
                 for pin in tile.pinned_floats:
-                    if pin[0] == 6:
+                    if pin[0] == 12:
                         layers["enemies"][(int(x + pin[1].x), int(y + pin[1].y))] = pin[
                             2
                         ][0]
-                    elif pin[0] == 7:
+                    elif pin[0] == 13:
                         layers["nodes"][
                             (int(x + pin[1].x + 32), int(y + pin[1].y + 32))
                         ] = pin[2]
@@ -218,7 +218,7 @@ class Editor:
                 self.selection_id += 1
             if event.key == pygame.K_LEFT:
                 self.selection_id -= 1
-            if self.selection_id in [6, 7]:
+            if self.selection_id in [12, 13]:
                 if event.key == pygame.K_UP:
                     self.enemy_id += 1
                 if event.key == pygame.K_DOWN:
@@ -282,11 +282,11 @@ class Editor:
                     groups = [self.canvas_floats, self.canvas_background]
 
                 # node add logic
-                if self.selection_id == 6:
+                if self.selection_id == 12:
                     self.change_enemy_id()
                     self.node_dict[self.enemy_id] = []
                     node_id = (self.enemy_id, 0)
-                elif self.selection_id == 7:
+                elif self.selection_id == 13:
                     if self.enemy_id in self.node_dict:
                         if self.node_dict[self.enemy_id]:
                             node_index = self.node_dict[self.enemy_id][-1] + 1
@@ -326,12 +326,12 @@ class Editor:
                     self.check_border(current_cell)
 
             selected_float = self.mouse_on_float()
-            if selected_float and selected_float.float_id not in [0, 8, 9]:
-                if selected_float.float_id == 6:
+            if selected_float and selected_float.float_id not in [0, 13, 14]:
+                if selected_float.float_id == 12:
                     del self.node_dict[selected_float.enemy_id]
                     for sprite in self.canvas_floats:
                         if (
-                            sprite.float_id == 7
+                            sprite.float_id == 13
                             and sprite.node_id[0] == selected_float.enemy_id
                         ):
                             sprite.kill()

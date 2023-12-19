@@ -11,7 +11,7 @@ class Menu:
         self.display_surface = pygame.display.get_surface()
         self.switch = switch
         self.font = pygame.font.Font("../font/Pixeltype.ttf", 50)
-        self.exit_text_surf = self.font.render("     QUIT", False, "black")
+        self.exit_text_surf = self.font.render("     Quit", False, "black")
         self.editor_text_surf = self.font.render("   Editor", False, "black")
 
         self.buttons = pygame.sprite.Group()

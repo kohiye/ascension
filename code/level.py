@@ -96,16 +96,29 @@ class Level:
 
             match data:
                 case 4:
-                    Prop(pos, asset_dict["chair_fg"], groups)
+                    Prop(pos, asset_dict["chairR_fg"], groups)
                 case 5:
-                    Prop(pos, asset_dict["chair_bg"], groups)
+                    Prop(pos, asset_dict["chairR_bg"], groups)
+                case 6:
+                    Prop(pos, asset_dict["chairL_fg"], groups)
+                case 7:
+                    Prop(pos, asset_dict["chairL_bg"], groups)
                 case 8:
+                    Prop(pos, asset_dict["table_fg"], groups)
+                case 9:
+                    Prop(pos, asset_dict["table_bg"], groups)
+                case 10:
+                    Prop(pos, asset_dict["box_fg"], groups)
+                case 11:
+                    Prop(pos, asset_dict["box_bg"], groups)
+
+                case 14:
                     Prop(pos, asset_dict["entrance"], groups)
                     player_pos = (pos[0] + s.PLAYER_DOOR_SPAWN_DISTANCE, pos[1])
                     self.player = Player(
                         player_pos, groups, self.collision_sprites, self.player_bullets
                     )
-                case 9:
+                case 15:
                     Prop(pos, asset_dict["exit"], groups + [self.exit_door_group])
 
     def event_loop(self):
