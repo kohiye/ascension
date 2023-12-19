@@ -37,6 +37,7 @@ class Main:
         self.chair_bg = load("../graphics/chair/static/chair.png").convert_alpha()
         self.exit = load("../graphics/exit/exit.png").convert_alpha()
         self.entrance = load("../graphics/entrance/entrance.png").convert_alpha()
+        self.enemy = import_dir("../graphics/enemy/static/")
 
     def main_menu_click(self):
         id = self.menu.click()
@@ -77,6 +78,7 @@ class Main:
                             "chair_bg": self.chair_bg,
                             "exit": self.exit,
                             "entrance": self.entrance,
+                            "enemy": self.enemy,
                         },
                     )
 

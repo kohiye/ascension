@@ -146,7 +146,9 @@ class Player(Generic):
             self.gun_sound.play()
             self.ammo -= 1
             self.gun_cooldown.activate()
-            Bullet(self.rect.center, self.gun_vector.normalize(), self.player_bullets)
+            Bullet(
+                self.rect.center, 100, self.gun_vector.normalize(), self.player_bullets
+            )
 
     def update(self, dt):
         self.image.fill("green")
@@ -158,9 +160,11 @@ class Player(Generic):
 
 
 class Enemy(Generic):
-    def __init__(self, pos, group, collision_sprites, enemy_id, enemy_bullets):
-        super().__init__(pos, pygame.Surface((80, 80)), group)
-        self.image.fill("blue")
+    def __init__(self, pos, frames, group, collision_sprites, enemy_id, enemy_bullets):
+        self.frames = frames
+        self.frame_index = 0
+
+        super().__init__(pos, self.frames[self.frame_index], group)
 
         self.display_surf = pygame.display.get_surface()
 
@@ -190,8 +194,24 @@ class Enemy(Generic):
 
         self.health = 10
 
+        # gun
+        self.face_vector = vector(1, 0)
+        self.gun_surf_temp = pygame.image.load(
+            "../graphics/enemy/enemygun.png"
+        ).convert_alpha()
+        self.gun_rect = self.gun_surf_temp.get_rect(
+            center=(self.rect.centerx, self.rect.centery + 17)
+        )
+        self.gun_vector = vector(self.gun_rect.center) - vector(self.target)
+        self.offset = vector()
+        self.ammo = 1000
+        self.gun_sound = pygame.mixer.Sound("../audio/gun.mp3")
+        self.gun_sound.set_volume(s.VOLUME)
+
         self.enemy_bullets = enemy_bullets
         self.shoot_cooldown = Timer(100)
+
+        self.gun_surf = self.gun_surf_temp.copy()
 
     def share_data(self, player, nodes):
         self.player = player
@@ -212,7 +232,8 @@ class Enemy(Generic):
         if self.agro and not self.shoot_cooldown.active:
             self.shoot_cooldown.activate()
             target_vector = self.target - vector(self.rect.center)
-            Bullet(self.rect.center, target_vector.normalize(), self.enemy_bullets)
+            bullet_out_pos = (self.rect.centerx, self.rect.centery + 17)
+            Bullet(bullet_out_pos, 10, target_vector.normalize(), self.enemy_bullets)
 
     def enemy_vision(self):
         obstuctions = []
@@ -222,7 +243,6 @@ class Enemy(Generic):
 
         if obstuctions and self.agro:
             self.target = self.last_target
-            self.image.fill("orange")
             dist_to_target = vector(self.hitbox.center) - vector(self.target)
             if dist_to_target.magnitude() < 40:
                 if not self.agro_timer.active:
@@ -237,13 +257,11 @@ class Enemy(Generic):
                 self.target = self.node_target
             else:
                 self.target = self.last_target
-            self.image.fill("blue")
 
         else:
             self.agro = True
             self.target = vector(self.player.rect.center)
             self.last_target = self.target
-            self.image.fill("red")
 
     def friction(self):
         self.drag.x = (
@@ -288,6 +306,16 @@ class Enemy(Generic):
         self.player_repulsion_rect.centery = self.hitbox.centery
         self.collistion_check("Y")
         self.rect.centery = self.hitbox.centery
+
+        self.gun_vector = vector(self.target) - vector(
+            self.rect.centerx, self.rect.centery + 17
+        )
+        print(self.gun_vector)
+        angle = self.gun_vector.angle_to(self.face_vector)
+
+        self.gun_surf = pygame.transform.rotate(self.gun_surf_temp, angle)
+        self.gun_rect = self.gun_surf.get_rect()
+        self.gun_rect.center = (self.rect.centerx, self.rect.centery + 17)
 
     def node_route(self):
         if not self.agro and self.nodes:
@@ -346,10 +374,18 @@ class Enemy(Generic):
                     self.shift.y = self.hitbox.y
                     self.speed.y = -self.speed.y
 
+    def animation(self, dt):
+        self.frame_index = self.frame_index + dt * s.ANIMATION_SPEED
+        if self.frame_index > len(self.frames):
+            self.frame_index = 0
+
+        self.image = self.frames[int(self.frame_index)]
+
     def update(self, dt):
         self.offset_sync()
         self.node_route()
         self.enemy_vision()
+        self.animation(dt)
         self.input()
         self.move(dt)
         self.attack()
@@ -362,13 +398,14 @@ class Prop(Generic):
 
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, pos, direction, groups):
+    def __init__(self, pos, barrel_length, direction, groups):
         super().__init__(groups)
+
         self.groups = groups
         self.image = pygame.Surface((5, 5))
         self.rect = self.image.get_rect(center=pos)
         self.direction = direction
-        self.shift = vector(self.rect.topleft)
+        self.shift = vector(self.rect.topleft) + barrel_length * direction
 
         self.life_timer = Timer(s.BULLET_LIFE_TIME_MS)
         self.life_timer.activate()
