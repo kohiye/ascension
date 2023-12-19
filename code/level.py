@@ -7,6 +7,7 @@ import settings as s
 from lvlsprites import Generic, Player, Coin, Prop, Enemy
 from gameMenu import Menu
 
+
 class Level:
     def __init__(self, lvl_data, switch, asset_dict):
         self.display_surface = pygame.display.get_surface()
@@ -31,7 +32,7 @@ class Level:
         self.enemy_bullets = PlayerCameraGroup()
 
         self.money = 0
-        self.player_health = 15
+        self.player_health = 15000
 
         self.nodes = {}
 
@@ -87,6 +88,7 @@ class Level:
             if layer_name == "enemies":
                 Enemy(
                     pos,
+                    asset_dict["enemy"],
                     groups + [self.enemy_sprites],
                     self.collision_sprites,
                     data,
@@ -169,6 +171,12 @@ class Level:
             self.collision_sprites, self.player_bullets, False, True
         )
 
+    def draw_enemy_guns(self, offset):
+        for enemy in self.enemy_sprites:
+            gun_rect = enemy.gun_rect.copy()
+            gun_rect.topleft -= offset
+            self.display_surface.blit(enemy.gun_surf, gun_rect)
+
     def run(self, dt):
         self.event_loop()
         self.generic_sprites.update(dt)
@@ -193,6 +201,8 @@ class Level:
         gun_rect = self.player.gun_rect.copy()
         gun_rect.topleft -= self.offset
         self.display_surface.blit(self.player.gun_surf, gun_rect)
+
+        self.draw_enemy_guns(self.offset)
 
         self.fore_sprites.camera_draw(self.player)
 

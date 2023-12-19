@@ -115,8 +115,8 @@ CANVAS_TEMPLATES = {
         "ground": "mid",
         "type": "float",
         "menu": "enemy",
-        "preview": "../graphics/enemy/enemy.png",
-        "frames": "../graphics/enemy",
+        "preview": "../graphics/enemy/static/pixil-frame-0.png",
+        "frames": "../graphics/enemy/static/",
     },
     13: {
         "name": "ai_node",
