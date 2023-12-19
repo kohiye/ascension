@@ -24,9 +24,7 @@ class Main:
 
         self.imports()
 
-        self.death_screen = Result(self.switch)
         self.menu = Menu(self.switch)
-        self.exit_screen = Score(self.switch)
         self.editor = Editor(self.wall_tiles, self.switch)
 
         self.mode = 0
@@ -50,10 +48,12 @@ class Main:
             elif id == "editor":
                 self.mode = 1
 
-    def switch(self, event, lvl_data=None):
+    def switch(self, event, lvl_data=None, money=None):
         if event == "lvl_exit":
+            self.exit_screen = Score(self.switch, money)
             self.mode = 3
         elif event == "death":
+            self.death_screen = Result(self.switch, money)
             self.mode = 4
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:

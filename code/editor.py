@@ -195,7 +195,7 @@ class Editor:
                 sys.exit()
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                self.switch(event, self.export_level())
+                self.switch(event, lvl_data=self.export_level())
             else:
                 self.switch(event)
 

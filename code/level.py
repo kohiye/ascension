@@ -142,11 +142,11 @@ class Level:
             self.player_health -= 1
 
         if self.player_health <= 0:
-            self.switch("death")
+            self.switch("death", money=self.money)
 
     def door_exit(self):
         if pygame.sprite.spritecollide(self.player, self.exit_door_group, False):
-            self.switch("lvl_exit")
+            self.switch("lvl_exit", money=self.money)
 
     def bullet_wall_collison(self):
         enemy_collisions = pygame.sprite.groupcollide(
