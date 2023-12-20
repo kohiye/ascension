@@ -24,6 +24,7 @@ class Level:
         self.mid_sprites = PlayerCameraGroup()
         self.wall_sprites = PlayerCameraGroup()
         self.coin_sprites = PlayerCameraGroup()
+        self.player_sprites = PlayerCameraGroup()
         self.enemy_sprites = PlayerCameraGroup()
         self.collision_sprites = PlayerCameraGroup()
         self.exit_door_group = PlayerCameraGroup()
@@ -118,7 +119,11 @@ class Level:
                     Prop(pos, asset_dict["entrance"], groups)
                     player_pos = (pos[0] + s.PLAYER_DOOR_SPAWN_DISTANCE, pos[1])
                     self.player = Player(
-                        player_pos, groups, self.collision_sprites, self.player_bullets
+                        player_pos, 
+                        asset_dict["player"], 
+                        groups + [self.collision_sprites],
+                        data,
+                        self.player_bullets,
                     )
                 case 15:
                     Prop(pos, asset_dict["exit"], groups + [self.exit_door_group])

@@ -30,7 +30,7 @@ class Main:
         self.mode = 0
 
     def imports(self):
-        self.wall_tiles = import_dir_dict("../graphics/wall")
+        self.wall_tiles = import_dir_dict("../graphics/realwall")
         self.air_surf = load("../graphics/air.png").convert_alpha()
         self.coin_frames = import_dir("../graphics/coin/static")
         self.chairR_fg = load("../graphics/chairR/static/chairR.png").convert_alpha()
@@ -43,6 +43,7 @@ class Main:
         self.table_bg = load("../graphics/table/static/table.png").convert_alpha()
         self.exit = load("../graphics/exit/exit.png").convert_alpha()
         self.entrance = load("../graphics/entrance/entrance.png").convert_alpha()
+        self.player = import_dir("../graphics/player/static/")
         self.enemy = import_dir("../graphics/enemy/static/")
 
     def main_menu_click(self):
@@ -90,6 +91,7 @@ class Main:
                             "box_bg" : self.box_bg,
                             "exit": self.exit,
                             "entrance": self.entrance,
+                            "player": self.player,
                             "enemy": self.enemy,
                         },
                     )

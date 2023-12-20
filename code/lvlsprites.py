@@ -41,9 +41,10 @@ class Coin(Animated):
 
 
 class Player(Generic):
-    def __init__(self, pos, group, collision_sprites, player_bullets):
-        super().__init__(pos, pygame.Surface((90, 127)), group)
-        self.image.fill("green")
+    def __init__(self, pos, frames, group, collision_sprites, player_bullets):
+        self.frames = frames
+        self.frame_index = 0
+        super().__init__(pos, self.frames[self.frame_index], group)
 
         self.speed = vector()
         self.touch_ground = True
@@ -233,7 +234,11 @@ class Enemy(Generic):
             self.shoot_cooldown.activate()
             target_vector = self.target - vector(self.rect.center)
             bullet_out_pos = (self.rect.centerx, self.rect.centery + 17)
-            Bullet(bullet_out_pos, 10, target_vector.normalize(), self.enemy_bullets)
+            Bullet(
+                bullet_out_pos, 10, 
+                target_vector.normalize() if target_vector != vector(0) else vector(0),
+                self.enemy_bullets,
+            )
 
     def enemy_vision(self):
         obstuctions = []
@@ -310,7 +315,6 @@ class Enemy(Generic):
         self.gun_vector = vector(self.target) - vector(
             self.rect.centerx, self.rect.centery + 17
         )
-        print(self.gun_vector)
         angle = self.gun_vector.angle_to(self.face_vector)
 
         self.gun_surf = pygame.transform.rotate(self.gun_surf_temp, angle)

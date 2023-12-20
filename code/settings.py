@@ -11,7 +11,6 @@ CAMERA_Y_SHIFT = 50
 ENEMY_PLAYER_REPULSION = 400
 PLAYER_DOOR_SPAWN_DISTANCE = 70
 VOLUME = 0.1
-GREEN = 97, 234, 94
 
 CANVAS_TEMPLATES = {
     0: {
@@ -26,7 +25,7 @@ CANVAS_TEMPLATES = {
         "name": "wall",
         "type": "tile",
         "menu": "wall",
-        "preview": "../graphics/wall/wall.png",
+        "preview": "../graphics/wall/x.png",
         "graphics": "../graphics/wall/wall.png",
         "frames": None,
     },
@@ -142,6 +141,7 @@ CANVAS_TEMPLATES = {
         "preview": None,
         "frames": "../graphics/exit",
     },
+
 }
 
 WALL_DIRECTIONS = {
