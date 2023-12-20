@@ -7,7 +7,7 @@ import settings as s
 
 class Menu:
     def __init__(self, switch):
-        self.menu = pygame.image.load("../graphics/menu.JPG").convert_alpha()
+        self.menu = pygame.image.load("../graphics/menu.jpg").convert_alpha()
         self.display_surface = pygame.display.get_surface()
         self.switch = switch
         self.font = pygame.font.Font("../font/Pixeltype.ttf", 50)
@@ -46,7 +46,7 @@ class Menu:
 
     def display(self, dt):
         self.event_loop()
-        self.display_surface.blit(self.menu,(0,0))
+        self.display_surface.blit(self.menu, (0, 0))
         self.buttons.draw(self.display_surface)
 
 
