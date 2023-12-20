@@ -69,7 +69,7 @@ class Menu:
         if s.CANVAS_TEMPLATES[index]["menu"] == "wall":
             pygame.draw.rect(
                 self.display_surface,
-                "#000080",
+                "#076d7d",
                 self.tile_button_rect.inflate(4, 4),
                 5,
                 4,
@@ -77,7 +77,7 @@ class Menu:
         if s.CANVAS_TEMPLATES[index]["menu"] == "coin":
             pygame.draw.rect(
                 self.display_surface,
-                "#000080",
+                "#076d7d",
                 self.coin_button_rect.inflate(4, 4),
                 5,
                 4,
@@ -85,7 +85,7 @@ class Menu:
         if s.CANVAS_TEMPLATES[index]["menu"] == "enemy":
             pygame.draw.rect(
                 self.display_surface,
-                "#000080",
+                "#076d7d",
                 self.enemy_button_rect.inflate(4, 4),
                 5,
                 4,
@@ -93,7 +93,7 @@ class Menu:
         if s.CANVAS_TEMPLATES[index]["menu"] in ("environment bg", "environment fg"):
             pygame.draw.rect(
                 self.display_surface,
-                "#000080",
+                "#076d7d",
                 self.chair_button_rect.inflate(4, 4),
                 5,
                 4,
@@ -128,7 +128,7 @@ class Button(pygame.sprite.Sprite):
         )
 
     def update(self):
-        self.image.fill("#0000ff")
+        self.image.fill("#099eb5")
         surf = self.items["main" if self.main_active else "alt"][self.id][1]
         rect = surf.get_rect(center=(self.rect.width / 2, self.rect.height / 2))
         self.image.blit(surf, rect)
