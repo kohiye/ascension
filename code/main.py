@@ -30,7 +30,7 @@ class Main:
         self.mode = 0
 
     def imports(self):
-        self.wall_tiles = import_dir_dict("../graphics/wall")
+        self.wall_tiles = import_dir_dict("../graphics/realwall/")
         self.air_surf = load("../graphics/air.png").convert_alpha()
         self.coin_frames = import_dir("../graphics/coin/static")
         self.chair_fg = load("../graphics/chair/static/chair.png").convert_alpha()

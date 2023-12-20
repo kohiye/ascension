@@ -233,7 +233,12 @@ class Enemy(Generic):
             self.shoot_cooldown.activate()
             target_vector = self.target - vector(self.rect.center)
             bullet_out_pos = (self.rect.centerx, self.rect.centery + 17)
-            Bullet(bullet_out_pos, 10, target_vector.normalize(), self.enemy_bullets)
+            Bullet(
+                bullet_out_pos,
+                10,
+                target_vector.normalize() if target_vector != vector(0) else vector(0),
+                self.enemy_bullets,
+            )
 
     def enemy_vision(self):
         obstuctions = []
