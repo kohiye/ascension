@@ -194,7 +194,7 @@ class Level:
         self.player_hit()
         self.door_exit()
 
-        self.display_surface.fill("lightblue")
+        self.display_surface.fill("#e7f0f6")
         self.wall_sprites.camera_draw(self.player)
         self.back_sprites.camera_draw(self.player)
         self.mid_sprites.camera_draw(self.player)
