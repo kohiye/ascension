@@ -41,21 +41,24 @@ class Coin(Animated):
 
 
 class Player(Generic):
-    def __init__(self, pos, group, collision_sprites, player_bullets):
-        super().__init__(pos, pygame.Surface((90, 127)), group)
-        self.image.fill("green")
+    def __init__(self, pos, frames, group, collision_sprites, player_bullets):
+        self.frames = frames
+        self.frame_id = 0
+        super().__init__(pos, self.frames[self.frame_id], group)
 
         self.speed = vector()
         self.touch_ground = True
 
-        self.hitbox = self.rect.inflate(-50, -15)
+        self.hitbox = self.rect.inflate(0, -15)
         self.shift = vector(self.hitbox.topleft)
         self.collision_sprites = collision_sprites
 
         # gun
         self.face_vector = vector(1, 0)
-        self.gun_surf_temp = pygame.image.load("../graphics/gun.png").convert_alpha()
-        self.gun_rect = self.gun_surf_temp.get_rect(center=self.rect.center)
+        self.gun_surf_temp = pygame.image.load("../graphics/torso.png").convert_alpha()
+        self.gun_rect = self.gun_surf_temp.get_rect(
+            center=(self.rect.x + 48, self.rect.y + 96)
+        )
         self.gun_vector = vector(self.gun_rect.center) - vector(mouse_pos())
         self.offset = vector()
         self.ammo = 1000
@@ -95,12 +98,16 @@ class Player(Generic):
 
         self.offset.x = self.rect.centerx - s.WINDOW_WIDTH // 2
         self.offset.y = self.rect.centery - s.WINDOW_HEIGHT // 2 - s.CAMERA_Y_SHIFT
-        self.gun_vector = vector(mouse_pos()) + self.offset - vector(self.rect.center)
+        self.gun_vector = (
+            vector(mouse_pos())
+            + self.offset
+            - vector(self.rect.x + 48, self.rect.y + 96)
+        )
         angle = self.gun_vector.angle_to(self.face_vector)
 
         self.gun_surf = pygame.transform.rotate(self.gun_surf_temp, angle)
         self.gun_rect = self.gun_surf.get_rect()
-        self.gun_rect.center = self.rect.center
+        self.gun_rect.center = (self.rect.x + 48, self.rect.y + 96)
 
     def gravity_pull(self, dt):
         self.speed.y += s.GRAVITY * dt
@@ -147,11 +154,13 @@ class Player(Generic):
             self.ammo -= 1
             self.gun_cooldown.activate()
             Bullet(
-                self.rect.center, 100, self.gun_vector.normalize(), self.player_bullets
+                (self.rect.x + 48, self.rect.y + 96),
+                50,
+                self.gun_vector.normalize(),
+                self.player_bullets,
             )
 
     def update(self, dt):
-        self.image.fill("green")
         self.input()
         self.move(dt)
         self.shoot()
@@ -234,6 +243,7 @@ class Enemy(Generic):
             target_vector = self.target - vector(self.rect.center)
             bullet_out_pos = (self.rect.centerx, self.rect.centery + 17)
             Bullet(bullet_out_pos, 10, target_vector.normalize(), self.enemy_bullets)
+            self.gun_sound.play()
 
     def enemy_vision(self):
         obstuctions = []

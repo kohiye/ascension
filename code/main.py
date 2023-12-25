@@ -16,7 +16,7 @@ from support import import_dir, import_dir_dict
 class Main:
     def __init__(self):
         pygame.init()
-        pygame.mixer.set_num_channels(30)
+        pygame.mixer.set_num_channels(50)
         self.display_surface = pygame.display.set_mode(
             (s.WINDOW_WIDTH, s.WINDOW_HEIGHT)
         )
@@ -44,6 +44,7 @@ class Main:
         self.exit = load("../graphics/exit/exit.png").convert_alpha()
         self.entrance = load("../graphics/entrance/entrance.png").convert_alpha()
         self.enemy = import_dir("../graphics/enemy/static/")
+        self.player = import_dir("../graphics/player/right/")
 
     def main_menu_click(self):
         id = self.menu.click()
@@ -86,11 +87,12 @@ class Main:
                             "chairL_bg": self.chairL_bg,
                             "table_fg": self.table_fg,
                             "table_bg": self.table_bg,
-                            "box_fg" : self.box_fg,
-                            "box_bg" : self.box_bg,
+                            "box_fg": self.box_fg,
+                            "box_bg": self.box_bg,
                             "exit": self.exit,
                             "entrance": self.entrance,
                             "enemy": self.enemy,
+                            "player": self.player,
                         },
                     )
 

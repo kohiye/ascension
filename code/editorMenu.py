@@ -8,6 +8,7 @@ class Menu:
         self.display_surface = pygame.display.get_surface()
         self.create_data()
         self.create_buttons()
+        self.text_field = InputBox(10, 10, 500, 100)
 
     def create_data(self):
         self.menu_surfs = {}
@@ -103,6 +104,7 @@ class Menu:
         self.buttons.update()
         self.buttons.draw(self.display_surface)
         self.highlight_indicator(index)
+        self.text_field.draw(self.display_surface)
 
 
 class Button(pygame.sprite.Sprite):
@@ -132,3 +134,37 @@ class Button(pygame.sprite.Sprite):
         surf = self.items["main" if self.main_active else "alt"][self.id][1]
         rect = surf.get_rect(center=(self.rect.width / 2, self.rect.height / 2))
         self.image.blit(surf, rect)
+
+
+class InputBox:
+    def __init__(self, x, y, w, h, text=""):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color = "green"
+        self.text = text
+        self.font = pygame.font.Font("../font/Pixeltype.ttf", 50)
+        self.txt_surface = self.font.render(text, True, self.color)
+        self.active = False
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.rect.collidepoint(event.pos):
+                self.active = not self.active
+            else:
+                self.active = False
+            self.color = "blue" if self.active else "green"
+        if event.type == pygame.KEYDOWN:
+            if self.active:
+                if event.key == pygame.K_BACKSPACE:
+                    self.text = self.text[:-1]
+                else:
+                    self.text += event.unicode
+                self.txt_surface = self.font.render(self.text, True, self.color)
+
+    def update(self):
+        width = max(200, self.txt_surface.get_width() + 10)
+        self.rect.w = width
+
+    def draw(self, screen):
+        self.update()
+        screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
+        pygame.draw.rect(screen, self.color, self.rect, 2)

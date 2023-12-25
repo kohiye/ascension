@@ -190,6 +190,7 @@ class Editor:
             self.float_drag(event)
             self.selection_arrows(event)
             self.menu_click(event)
+            self.menu.text_field.handle_event(event)
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
@@ -260,6 +261,7 @@ class Editor:
             mouse_buttons()[0]
             and not self.float_drag_active
             and not self.menu.rect.collidepoint(mouse_pos())
+            and not self.menu.text_field.rect.collidepoint(mouse_pos())
         ):
             current_cell = self.get_current_cell(mouse_pos())
             if s.CANVAS_TEMPLATES[self.selection_id]["type"] == "tile":
@@ -316,7 +318,11 @@ class Editor:
             self.change_enemy_id()
 
     def canvas_remove(self):
-        if mouse_buttons()[2] and not self.menu.rect.collidepoint(mouse_pos()):
+        if (
+            mouse_buttons()[2]
+            and not self.menu.rect.collidepoint(mouse_pos())
+            and not self.menu.text_field.rect.collidepoint(mouse_pos())
+        ):
             if self.canvas_data:
                 current_cell = self.get_current_cell(mouse_pos())
                 if current_cell in self.canvas_data:
@@ -460,7 +466,9 @@ class Editor:
         surf = self.preview_surfs[self.selection_id].copy()
         surf.set_alpha(200)
 
-        if not self.menu.rect.collidepoint(mouse_pos()):
+        if not self.menu.rect.collidepoint(
+            mouse_pos()
+        ) and not self.menu.text_field.rect.collidepoint(mouse_pos()):
             if type_dict[self.selection_id] == "tile":
                 current_cell = self.get_current_cell(mouse_pos())
                 rect = surf.get_rect(

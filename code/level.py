@@ -16,7 +16,9 @@ class Level:
         self.menu = Menu()
 
         self.coin_sound = pygame.mixer.Sound("../audio/coin.mp3")
-        self.coin_sound.set_volume(s.VOLUME)
+        self.coin_sound.set_volume(s.VOLUME + 0.5)
+        self.robot_death_sound = pygame.mixer.Sound("../audio/robot_death.wav")
+        self.coin_sound.set_volume(s.VOLUME + 0.5)
 
         self.generic_sprites = PlayerCameraGroup()
         self.fore_sprites = PlayerCameraGroup()
@@ -32,7 +34,7 @@ class Level:
         self.enemy_bullets = PlayerCameraGroup()
 
         self.money = 0
-        self.player_health = 15000
+        self.player_health = 15
 
         self.nodes = {}
 
@@ -118,7 +120,11 @@ class Level:
                     Prop(pos, asset_dict["entrance"], groups)
                     player_pos = (pos[0] + s.PLAYER_DOOR_SPAWN_DISTANCE, pos[1])
                     self.player = Player(
-                        player_pos, groups, self.collision_sprites, self.player_bullets
+                        player_pos,
+                        asset_dict["player"],
+                        groups,
+                        self.collision_sprites,
+                        self.player_bullets,
                     )
                 case 15:
                     Prop(pos, asset_dict["exit"], groups + [self.exit_door_group])
@@ -147,9 +153,9 @@ class Level:
                 enemy.health -= len(points)
 
                 if enemy.health <= 0:
+                    self.robot_death_sound.play()
                     enemy.kill()
                     self.money += 10
-                    self.coin_sound.play()
 
     def player_hit(self):
         hits = pygame.sprite.spritecollide(self.player, self.enemy_bullets, True)
