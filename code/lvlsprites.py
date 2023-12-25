@@ -152,7 +152,7 @@ class Player(Generic):
             self.ammo -= 1
             self.gun_cooldown.activate()
             Bullet(
-                self.rect.center, 100, self.gun_vector.normalize(), self.player_bullets
+                self.rect.center, 0, self.gun_vector.normalize(), self.player_bullets
             )
     def get_status(self):
         self.status = "walk" if self.speed.x != 0 else "static"
