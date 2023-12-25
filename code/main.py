@@ -11,6 +11,7 @@ from death_screen import Result
 
 import settings as s
 from support import import_dir, import_dir_dict
+from os import walk
 
 
 class Main:
@@ -43,7 +44,7 @@ class Main:
         self.table_bg = load("../graphics/table/static/table.png").convert_alpha()
         self.exit = load("../graphics/exit/exit.png").convert_alpha()
         self.entrance = load("../graphics/entrance/entrance.png").convert_alpha()
-        self.player = import_dir("../graphics/player/static/")
+        self.player = {folder: import_dir(f"../graphics/player/{folder}") for folder in list(walk("../graphics/player/"))[0][1]}
         self.enemy = import_dir("../graphics/enemy/static/")
 
     def main_menu_click(self):

@@ -18,6 +18,7 @@ class Level:
         self.coin_sound = pygame.mixer.Sound("../audio/coin.mp3")
         self.coin_sound.set_volume(s.VOLUME)
 
+        self.player_sprites = PlayerCameraGroup()
         self.generic_sprites = PlayerCameraGroup()
         self.fore_sprites = PlayerCameraGroup()
         self.back_sprites = PlayerCameraGroup()
@@ -121,8 +122,8 @@ class Level:
                     self.player = Player(
                         player_pos, 
                         asset_dict["player"], 
-                        groups + [self.collision_sprites],
-                        data,
+                        groups,
+                        self.collision_sprites,
                         self.player_bullets,
                     )
                 case 15:

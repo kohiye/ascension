@@ -22,7 +22,6 @@ class Animated(Generic):
         self.frames = frames
         self.frame_index = 0
         super().__init__(pos, self.frames[self.frame_index], group)
-
     def animate(self, dt):
         self.frame_index += s.ANIMATION_SPEED * dt
         self.frame_index = (
@@ -44,11 +43,14 @@ class Player(Generic):
     def __init__(self, pos, frames, group, collision_sprites, player_bullets):
         self.frames = frames
         self.frame_index = 0
-        super().__init__(pos, self.frames[self.frame_index], group)
 
         self.speed = vector()
         self.touch_ground = True
 
+        self.status = "static"
+        self.orientation = "right"
+        surf = self.frames[f"{self.status}_{self.orientation}"][self.frame_index]
+        super().__init__(pos, surf, group)
         self.hitbox = self.rect.inflate(-50, -15)
         self.shift = vector(self.hitbox.topleft)
         self.collision_sprites = collision_sprites
@@ -72,8 +74,10 @@ class Player(Generic):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_d]:
             self.speed.x = 1
+            self.orientation = "right"
         elif keys[pygame.K_a]:
             self.speed.x = -1
+            self.orientation = "left"
         else:
             self.speed.x = 0
 
@@ -150,9 +154,19 @@ class Player(Generic):
             Bullet(
                 self.rect.center, 100, self.gun_vector.normalize(), self.player_bullets
             )
+    def get_status(self):
+        self.status = "walk" if self.speed.x != 0 else "static"
+    def animation(self, dt):
+        current_animation = self.frames[f"{self.status}_{self.orientation}"]
+        self.frame_index = self.frame_index + dt * s.ANIMATION_SPEED
+        if self.frame_index > len(self.frames):
+            self.frame_index = 0
+
+        self.image = current_animation[int(self.frame_index)]
 
     def update(self, dt):
-        self.image.fill("green")
+        self.get_status()
+        self.animation(dt)
         self.input()
         self.move(dt)
         self.shoot()
