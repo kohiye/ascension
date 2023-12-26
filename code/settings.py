@@ -26,8 +26,8 @@ CANVAS_TEMPLATES = {
         "name": "wall",
         "type": "tile",
         "menu": "wall",
-        "preview": "../graphics/wall/wall.png",
-        "graphics": "../graphics/wall/wall.png",
+        "preview": "../graphics/wall/wall/A.png",
+        "graphics": "../graphics/wall/",
         "frames": None,
     },
     2: {
