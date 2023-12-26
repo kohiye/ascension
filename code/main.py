@@ -31,7 +31,7 @@ class Main:
         self.mode = 0
 
     def imports(self):
-        self.wall_tiles = import_dir_dict("../graphics/realwall")
+        self.wall_tiles = import_dir_dict("../graphics/wall")
         self.air_surf = load("../graphics/air.png").convert_alpha()
         self.coin_frames = import_dir("../graphics/coin/static")
         self.chairR_fg = load("../graphics/chairR/static/chairR.png").convert_alpha()
@@ -44,7 +44,10 @@ class Main:
         self.table_bg = load("../graphics/table/static/table.png").convert_alpha()
         self.exit = load("../graphics/exit/exit.png").convert_alpha()
         self.entrance = load("../graphics/entrance/entrance.png").convert_alpha()
-        self.player = {folder: import_dir(f"../graphics/player/{folder}") for folder in list(walk("../graphics/player/"))[0][1]}
+        self.player = {
+            folder: import_dir(f"../graphics/player/{folder}")
+            for folder in list(walk("../graphics/player/"))[0][1]
+        }
         self.enemy = import_dir("../graphics/enemy/static/")
 
     def main_menu_click(self):
@@ -88,8 +91,8 @@ class Main:
                             "chairL_bg": self.chairL_bg,
                             "table_fg": self.table_fg,
                             "table_bg": self.table_bg,
-                            "box_fg" : self.box_fg,
-                            "box_bg" : self.box_bg,
+                            "box_fg": self.box_fg,
+                            "box_bg": self.box_bg,
                             "exit": self.exit,
                             "entrance": self.entrance,
                             "player": self.player,

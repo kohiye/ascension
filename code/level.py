@@ -120,8 +120,8 @@ class Level:
                     Prop(pos, asset_dict["entrance"], groups)
                     player_pos = (pos[0] + s.PLAYER_DOOR_SPAWN_DISTANCE, pos[1])
                     self.player = Player(
-                        player_pos, 
-                        asset_dict["player"], 
+                        player_pos,
+                        asset_dict["player"],
                         groups,
                         self.collision_sprites,
                         self.player_bullets,
@@ -194,7 +194,7 @@ class Level:
         self.player_hit()
         self.door_exit()
 
-        self.display_surface.fill("lightblue")
+        self.display_surface.fill("black")
         self.wall_sprites.camera_draw(self.player)
         self.back_sprites.camera_draw(self.player)
         self.mid_sprites.camera_draw(self.player)

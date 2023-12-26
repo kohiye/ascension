@@ -25,7 +25,7 @@ CANVAS_TEMPLATES = {
         "name": "wall",
         "type": "tile",
         "menu": "wall",
-        "preview": "../graphics/wall/x.png",
+        "preview": "../graphics/wall/X.png",
         "graphics": "../graphics/wall/wall.png",
         "frames": None,
     },
@@ -141,7 +141,6 @@ CANVAS_TEMPLATES = {
         "preview": None,
         "frames": "../graphics/exit",
     },
-
 }
 
 WALL_DIRECTIONS = {
