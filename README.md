@@ -1,2 +1,2 @@
 # ascension
-run game in exe
+run game.exe in exe file
