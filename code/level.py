@@ -34,7 +34,7 @@ class Level:
         self.enemy_bullets = PlayerCameraGroup()
 
         self.money = 0
-        self.player_health = 15000
+        self.player_health = 100
 
         self.nodes = {}
 
@@ -122,9 +122,10 @@ class Level:
                     self.player = Player(
                         player_pos, 
                         asset_dict["player"], 
-                        groups,
+                        groups + [self.mid_sprites],
                         self.collision_sprites,
                         self.player_bullets,
+                        self.switch,
                     )
                 case 15:
                     Prop(pos, asset_dict["exit"], groups + [self.exit_door_group])
@@ -194,7 +195,7 @@ class Level:
         self.player_hit()
         self.door_exit()
 
-        self.display_surface.fill("#e7f0f6")
+        self.display_surface.fill("black")
         self.wall_sprites.camera_draw(self.player)
         self.back_sprites.camera_draw(self.player)
         self.mid_sprites.camera_draw(self.player)

@@ -40,9 +40,10 @@ class Coin(Animated):
 
 
 class Player(Generic):
-    def __init__(self, pos, frames, group, collision_sprites, player_bullets):
+    def __init__(self, pos, frames, group, collision_sprites, player_bullets,switch):
         self.frames = frames
         self.frame_index = 0
+        self.switch = switch
 
         self.speed = vector()
         self.touch_ground = True
@@ -102,6 +103,9 @@ class Player(Generic):
         self.offset.y = self.rect.centery - s.WINDOW_HEIGHT // 2 - s.CAMERA_Y_SHIFT
         self.gun_vector = vector(mouse_pos()) + self.offset - vector(self.rect.center)
         angle = self.gun_vector.angle_to(self.face_vector)
+        print(self.offset.y)
+        if self.offset.y > 10000:
+            self.switch("death")
 
         self.gun_surf = pygame.transform.rotate(self.gun_surf_temp, angle)
         self.gun_rect = self.gun_surf.get_rect()

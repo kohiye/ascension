@@ -326,7 +326,7 @@ class Editor:
                     self.check_border(current_cell)
 
             selected_float = self.mouse_on_float()
-            if selected_float and selected_float.float_id not in [0, 13, 14]:
+            if selected_float and selected_float.float_id not in [0, 14, 15]:
                 if selected_float.float_id == 12:
                     del self.node_dict[selected_float.enemy_id]
                     for sprite in self.canvas_floats:
